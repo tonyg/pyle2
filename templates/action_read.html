@@ -1,0 +1,15 @@
+<html>
+  <head>
+    <title>Pyle: $page.title</title>
+  </head>
+  <body>
+    <div class="container">
+      <div class="pagecontainer">
+	$page.render('html')
+      </div>
+      <div class="footer">
+	$internal_link($page.title, 'edit', 'Edit this page')
+      </div>
+    </div>
+  </body>
+</html>

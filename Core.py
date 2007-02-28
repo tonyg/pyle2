@@ -1,0 +1,238 @@
+import web
+import cgi
+import pickle
+import Block
+import os
+import Cheetah.Template
+import exceptions
+import traceback
+import sys
+
+class Renderable:
+    def render(self, format):
+	import RenderUtils
+	templatename = os.path.join('templates', self.templateName() + '.' + format)
+	return Cheetah.Template.Template(file = templatename,
+					 searchList = (self, RenderUtils))
+
+class Store:
+    def probe_kind(self):
+	return 'txt'
+
+    def has_key(self, title):
+	subClassResponsibility()
+
+    def getitem(self, title, kind, defaultvalue):
+	subClassResponsibility()
+
+    def setitem(self, title, kind, value):
+	subClassResponsibility()
+
+    def getpickle(self, title, kind, defaultvalue):
+	p = self.getitem(title, kind, None)
+	if p:
+	    return pickle.loads(p)
+	else:
+	    return defaultvalue
+
+    def setpickle(self, title, kind, value):
+	self.setitem(title, kind, pickle.dumps(value))
+
+    def page(self, title, createIfAbsent = False):
+	if has_key(self, title) or createIfAbsent:
+	    return Page(self, title)
+	else:
+	    raise KeyError(title)
+
+    def __get__(self, title):
+	return self.page(title)
+
+class FileStore(Store):
+    def __init__(self, dirname):
+	self.dirname = dirname
+
+    def path_(self, title, kind):
+	p = os.path.join(self.dirname, title)
+	if kind is not None:
+	    p = p + '.' + kind
+	return p
+
+    def has_key(self, title):
+	return os.path.exists(self.path_(title, self.probe_kind()))
+
+    def getitem(self, title, kind, defaultvalue):
+	try:
+	    f = open(self.path_(title, kind), 'rb')
+	    content = f.read()
+	    f.close()
+	    return content
+	except IOError:
+	    return defaultvalue
+
+    def setitem(self, title, kind, value):
+	f = open(self.path_(title, kind), 'wb')
+	f.write(value)
+	f.close()
+
+    def commit(self):
+	pass
+
+class Paragraph(Renderable):
+    def __init__(self, blockPara):
+	import Inline
+	self.fragments = []
+	Inline.parse(blockPara.as_string(), self.fragments)
+
+    def templateName(self):
+	return 'pyle_paragraph'
+
+class ListItem(Paragraph):
+    def templateName(self):
+	return 'pyle_listitem'
+
+class List(Renderable):
+    def __init__(self, is_ordered):
+	self.is_ordered = is_ordered
+	self.list_items = []
+
+    def addItem(self, item):
+	self.list_items.append(item)
+
+    def templateName(self):
+	return 'pyle_list'
+
+class Section(Renderable):
+    def __init__(self, rank, titleline, doc):
+	self.rank = rank
+	self.titleline = titleline
+	self.section_items = []
+
+    def addItem(self, item):
+	self.section_items.append(item)
+
+    def templateName(self):
+	return 'pyle_section'
+
+class Separator(Renderable):
+    def templateName(self):
+	return 'pyle_separator'
+
+def find_plugin(category, name, entrypoint):
+    try:
+	mod = __import__(category + '.' + name)
+	if hasattr(mod, name):
+	    mod = getattr(mod, name)
+	    if hasattr(mod, entrypoint):
+		return (None, getattr(mod, entrypoint))
+	    else:
+		return ('Plugin ' + category + '.' + name + \
+			' missing entrypoint ' + entrypoint, None)
+	else:
+	    return ('Plugin ' + category + '.' + name + \
+		    ' did not load correctly', None)
+    except exceptions.ImportError:
+	return ('Could not find plugin ' + category + '.' + name, None)
+    except:
+	return ('Error loading plugin ' + category + '.' + name + ':\n<tt>' +
+		cgi.escape(''.join(traceback.format_exception(*sys.exc_info()))) +
+		'</tt>', None)
+
+class PyleBlockParser(Block.BasicWikiMarkup):
+    def __init__(self, page):
+	Block.BasicWikiMarkup.__init__(self, self)
+	self.page = page
+	self.accumulator = page
+	self.stack = []
+
+    def current_rank(self):
+	if isinstance(self.accumulator, Section):
+	    return self.accumulator.rank
+	else:
+	    return 0
+
+    def push_acc(self, acc):
+	self.accumulator.addItem(acc)
+	self.stack.append(self.accumulator)
+	self.accumulator = acc
+	return acc
+
+    def add(self, item):
+	self.accumulator.addItem(item)
+
+    def pop_acc(self):
+	self.accumulator = self.stack.pop()
+
+    def begin_list(self, is_ordered):
+	self.push_acc(List(is_ordered))
+
+    def visit_item(self, para):
+	self.add(ListItem(para))
+
+    def end_list(self, is_ordered):
+	self.pop_acc()
+
+    def visit_section(self, rank, titleline, doc):
+	while self.current_rank() >= rank:
+	    self.pop_acc()
+	while self.current_rank() < rank - 1:
+	    self.push_acc(Section(self.current_rank() + 1, None, None))
+	self.push_acc(Section(rank, titleline, doc))
+
+    def visit_separator(self):
+	self.add(Separator())
+
+    def visit_sublanguage(self, commandline, doc):
+	commandparts = commandline.split(' ', 1)
+	command = commandparts[0]
+	if len(commandparts) > 1:
+	    args = commandparts[1]
+	else:
+	    args = ''
+	(err, plugin) = find_plugin('sublanguages', command, 'SublanguageHandler')
+	if plugin:
+	    plugin(args, doc, self)
+	else:
+	    import Inline
+	    self.add(Inline.MarkupError(True, 'missingsublanguage', err))
+
+    def visit_normal(self, para):
+	self.add(Paragraph(para))
+
+class Page(Renderable):
+    def __init__(self, store, cache, title):
+	self.store = store
+	self.cache = cache
+	self.title = title
+	self.load_()
+
+    def load_(self):
+	self.text = self.store.getitem(self.title, 'txt', '')
+	self.meta = self.store.getpickle(self.title, None, {})
+	self.tree = self.cache.getpickle(self.title, 'tree', None)
+	self.mediacache = self.cache.getpickle(self.title, 'mediacache', {})
+	if self.tree is None:
+	    self.renderTree()
+
+    def setText(self, newtext):
+	self.text = newtext
+	self.renderTree()
+
+    def renderTree(self):
+	self.tree = []
+	doc = Block.parsestring(self.text)
+	PyleBlockParser(self).visit(doc.children)
+	self.saveTree()
+
+    def saveTree(self):
+	self.cache.setpickle(self.title, 'tree', self.tree)
+	self.cache.setpickle(self.title, 'mediacache', self.mediacache)
+
+    def addItem(self, item):
+	self.tree.append(item)
+
+    def save(self):
+	self.store.setitem(self.title, 'txt', self.text)
+	self.store.setpickle(self.title, None, self.meta)
+
+    def templateName(self):
+	return 'page'
