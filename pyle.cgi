@@ -15,7 +15,7 @@ urls = (
     '/([^/]*)/edit', 'edit',
     '/([^/]*)/delete', 'delete',
     '/([^/]*)/mediacache/(.*)', 'mediacache',
-    '/([^/]*)/static/style.css', 'style',
+    '/_/static/style.css', 'style',
     )
 
 def mac(str):
@@ -109,7 +109,7 @@ class edit(PageAction):
         return 'action_edit'
 
 class style:
-    def GET(self, pagename):
+    def GET(self):
 	web.header('Content-Type', 'text/css')
 	f = open('static/style.css', 'rb')
 	web.output(f.read())
