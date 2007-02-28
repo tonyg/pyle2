@@ -11,6 +11,14 @@
       </div>
       <div class="footer">
 	$internal_link($page.title, 'edit', 'Edit this page')
+	(version $escape($page.getmeta("version", "<unknown>")),
+	last modified $escape($page.getmeta("Date", "<unknown>"))#slurp
+#set $modifier = $page.getmeta("Modifier", "")
+#if $modifier != ''
+	by $modifier)
+#else
+)
+#end if
       </div>
     </div>
   </body>
