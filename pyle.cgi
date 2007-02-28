@@ -1,4 +1,5 @@
 #!/usr/bin/env python2.5
+# -*- python -*-
 from __future__ import generators
 import web
 import Core
