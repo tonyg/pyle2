@@ -10,6 +10,8 @@ executable:
 	chmod a+x pyle.cgi
 	chmod a+x sublanguages/sequence-helper.sh
 
-clean:
+clean: cleancache
 	rm -f $$(find . -name '*.pyc')
+
+cleancache:
 	rm -f pyledb_cache/*
