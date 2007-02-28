@@ -1,5 +1,8 @@
 all: executable index.cgi
 
+run: executable
+	./pyle.cgi
+
 index.cgi:
 	ln -s pyle.cgi index.cgi
 
