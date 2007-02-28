@@ -16,8 +16,8 @@ filestore_dir = './pyledb'
 cache_dir = './pyledb_cache'
 
 # Use "enscript" to format @code blocks? Set to None to disable.
-code_enscript_command = '/usr/bin/enscript'
+code_enscript_command = '/usr/bin/env enscript'
 # code_enscript_command = None
 
 # Where may "dot" be found, to render graph figures?
-dot_command = '/usr/local/bin/dot'
+dot_command = '/usr/bin/env dot'
