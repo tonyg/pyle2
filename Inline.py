@@ -33,7 +33,7 @@ class HtmlFragment(Core.Renderable):
 class TagFragment(Core.Renderable):
     def __init__(self, tag, fragments, klass=''):
 	self.tag = tag
-	self.klass = ''
+	self.klass = klass
 	self.fragments = fragments
 
     def templateName(self):
