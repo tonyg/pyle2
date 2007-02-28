@@ -7,10 +7,9 @@ import Cheetah.Template
 import exceptions
 import traceback
 import sys
-import rfc822
-import MimeWriter
 import StringIO
 import time
+import rfc822
 
 class Renderable:
     def render(self, format):
@@ -41,24 +40,6 @@ class Store:
 
     def setpickle(self, title, kind, value):
 	self.setitem(title, kind, pickle.dumps(value))
-
-    def getrfc822(self, title, kind, defaultheaders, defaultbody):
-        p = self.getitem(title, kind, None)
-        if p:
-            fp = StringIO.StringIO(p)
-            headers = rfc822.Message(fp)
-            body = fp.read()
-            return (headers, body)
-        else:
-            return (defaultheaders, defaultbody)
-
-    def setrfc822(self, title, kind, headers, body):
-        fp = StringIO.StringIO()
-        w = MimeWriter.MimeWriter(fp)
-        for (key, value) in headers.items():
-            w.addheader(key, value)
-        w.startbody('text/x-pylewiki-store').write(body)
-        self.setitem(title, kind, fp.getvalue())
 
     def page(self, title, createIfAbsent = False):
 	if has_key(self, title) or createIfAbsent:
@@ -241,7 +222,8 @@ class Page(Renderable):
 	self.load_()
 
     def load_(self):
-	(self.meta, self.text) = self.store.getrfc822(self.title, 'txt', {}, '')
+        self.meta = self.store.getpickle(self.title, 'meta', {})
+        self.text = self.store.getitem(self.title, 'txt', '')
 	self.tree = self.cache.getpickle(self.title, 'tree', None)
 	self.mediacache = self.cache.getpickle(self.title, 'mediacache', {})
 	if self.tree is None:
@@ -284,7 +266,8 @@ class Page(Renderable):
     def save(self, user):
         self.setmetadate('Date', time.time())
         self.setmeta('Modifier', user.getusername())
-	self.store.setrfc822(self.title, 'txt', self.meta, self.text)
+        self.store.setpickle(self.title, 'meta', self.meta)
+	self.store.setitem(self.title, 'txt', self.text)
 
     def templateName(self):
 	return 'page'
