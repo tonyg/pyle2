@@ -1,7 +1,7 @@
 all: executable index.cgi
 
 run: executable
-	./pyle.cgi
+	./pyle.cgi 127.0.0.1
 
 index.cgi:
 	ln -s pyle.cgi index.cgi
