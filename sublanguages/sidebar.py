@@ -1,7 +1,4 @@
-import Utils
-import Block
+import Core
 
 def SublanguageHandler(args, doc, renderer):
-    renderer.appendHtml('<div class="sidebar">\n')
-    Block.BasicWikiMarkup(renderer).visit(doc.children)
-    renderer.appendHtml('</div>\n')
+    renderer.push_and_visit(Core.Division('sidebar'), doc.children)
