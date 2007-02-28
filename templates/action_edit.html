@@ -1,14 +1,14 @@
 <html>
   <head>
-    <title>Pyle: Edit $page.title</title>
+    <title>Pyle: Edit $escape($page.title)</title>
     <link rel="stylesheet" type="text/css" href="$ctx.home/_/static/style.css"
 	  title="Pyle Stylesheet" media="screen">
   </head>
   <body>
     <div class="container">
       <h1>Edit $page.title</h1>
-      <form name="editform" method="post" action="$ctx.env.REQUEST_URI">
-	<textarea name="body" cols="80" rows="25">$page.text</textarea>
+      <form name="editform" method="post" action="$pquote($ctx.env.REQUEST_URI)">
+	<textarea name="body" cols="80" rows="25">$escape($page.text)</textarea>
 	<br />
 	<input type="Submit" name="save" value="Save" />
       </form>

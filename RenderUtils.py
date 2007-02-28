@@ -1,5 +1,7 @@
 import web
 import Core
+import cgi
+import urllib
 
 class InternalLink(Core.Renderable):
     def __init__(self, pagename, service = 'read', vistext = None):
@@ -38,3 +40,17 @@ class MediaCacheEntry(InternalLink):
 def media_cache(renderer, cachepath, vistext, template, mimetype, bytes):
     renderer.page.mediacache[cachepath] = (mimetype, bytes)
     return MediaCacheEntry(renderer.page.title, cachepath, vistext, template)
+
+escape = cgi.escape
+
+def aescape(s):
+    s = escape(s)
+    s = s.replace('"', '&quot;')
+    s = s.replace("'", '&apos;')
+    return s
+
+def pquote(s):
+    return urllib.quote_plus(s, ':/')
+
+def quote(s):
+    return urllib.quote(s, ':/')
