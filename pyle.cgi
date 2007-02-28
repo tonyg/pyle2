@@ -8,6 +8,7 @@ import Config
 import base64
 import md5
 import pickle
+import User
 
 urls = (
     '/([^/]*)', 'read',
@@ -21,9 +22,9 @@ def mac(str):
     return md5.new(str + Config.session_passphrase).hexdigest()
 
 def newSession():
-    return {
-        'user': None,
-        }
+    return web.storage({
+        'username': None,
+        })
 
 class Action(Core.Renderable):
     def __init__(self):
@@ -55,6 +56,12 @@ class Action(Core.Renderable):
             pass
         if not self.session:
             self.session = newSession()
+        self.user = None
+
+    def getuser(self):
+        if not self.user:
+            self.user = User.lookup(self.session.username)
+        return self.user
 
     def render(self, format):
         self.saveSession_()
@@ -95,7 +102,7 @@ class edit(PageAction):
     def POST(self, pagename):
         self.init_page(pagename)
         self.page.setText(self.input.body)
-        self.page.save()
+        self.page.save(self.getuser())
 	web.seeother(RenderUtils.InternalLink(self.page.title).url())
 
     def templateName(self):
