@@ -1,4 +1,4 @@
-import Utils
+import Core
 import Block
 import re
 
@@ -75,30 +75,54 @@ def group_columns(para):
     subparas = finish_row(rows, subparas)
     return rows
 
+class TableCell(Core.Container):
+    def __init__(self, colnum, rownum, attrs):
+	Core.Container.__init__(self)
+	self.colnum = colnum
+	self.rownum = rownum
+	self.attrs = attrs
+
+    def templateName(self):
+	return 'pyle_tablecell'
+
+class TableRow(Core.Container):
+    def __init__(self, rownum):
+	if rownum % 2:
+	    rowclass = 'oddrow'
+	else:
+	    rowclass = 'evenrow'
+	Core.Container.__init__(self, rowclass)
+	self.rownum = rownum
+
+    def templateName(self):
+	return 'pyle_tablerow'
+
+class Table(Core.Container):
+    def __init__(self, prefix):
+	Core.Container.__init__(self)
+	self.prefix = prefix
+
+    def templateName(self):
+	return 'pyle_table'
+
 def SublanguageHandler(args, doc, renderer):
     (colspecs, prefix) = collect_colspecs(args)
     rows = group_columns(doc.reconstruct_child_text())
 
     if not prefix:
         prefix = 'class="wikimarkup"'
-    renderer.appendHtml('<table %s cellspacing="0" cellpadding="0" border="0">' % prefix)
-    
+
+    renderer.push_acc(Table(prefix))
+
     rownum = 0
     for cols in rows:
         rownum = rownum + 1
-        if rownum % 2:
-            rowclass = 'oddrow'
-        else:
-            rowclass = 'evenrow'
-        renderer.appendHtml('<tr class="%s">' % rowclass)
+	renderer.push_acc(TableRow(rownum))
+
         colnum = 0
         for celldoc in cols:
             colnum = colnum + 1
-            renderer.appendHtml('<td ' + attrs_for(colnum, rownum, colspecs) + '>')
-            Block.BasicWikiMarkup(renderer).visit(celldoc.children)
-            # renderer.appendHtml('<pre>')
-            # renderer.appendPlain(celldoc.reconstruct_text().as_string())
-            # renderer.appendHtml('</pre>')
-            renderer.appendHtml('</td>')
-        renderer.appendHtml('</tr>')
-    renderer.appendHtml('</table>')
+	    renderer.push_visit_pop(TableCell(colnum, rownum, attrs_for(colnum, rownum, colspecs)),
+				    celldoc.children)
+	renderer.pop_acc()
+    renderer.pop_acc()

@@ -1,0 +1,175 @@
+body, li, td {
+/*	font-family: Arial,Lucida,Helvetica,sans-serif;  */
+	font-family: 'georgia', 'times new roman', serif;
+	font-size: 9pt;
+}
+
+form {
+	margin: 0pt;
+	padding: 0pt;
+}
+
+H1,H2,H3,H4,H5,H6 {
+/*	font-family: Arial,Lucida,Helvetica,sans-serif; */
+	margin: 0pt;
+	margin-bottom: 1em;
+}
+
+H1 {
+	font-size: 20pt;
+}
+
+H2 {
+	font-size: 16pt; 
+/*	font-style: italic; */
+}
+
+H3 { 
+	font-size: 12pt;
+/*	font-style: italic; */
+}
+
+H4 {
+	font-size: 10pt;
+}
+
+H5 {
+	font-size: 9pt;
+}
+
+H6 {
+	font-size: 9pt;
+}
+
+/*
+H1.wikipagetitle {
+	border-top: solid black 1px;
+	border-bottom: solid black 1px;
+	padding: 0.1em;
+	padding-top: 0.2em;
+	padding-left: 0.3em;
+	padding-bottom: 0.3em;
+	background: #d8ebff;
+}
+*/
+
+A {
+	color: #006ee5;
+}
+
+A.wikiword {
+	color: #000030;
+	text-decoration: none;
+	border-bottom: solid #dddddd 1px;
+}
+
+A.wikiword:hover {
+	background: #eeeeee;
+}
+
+A.wikilink {
+}
+
+A.wikilink:hover {
+	background: #eeeeee;
+}
+
+DIV.quote {
+	color: #aa3311;
+	font-size: xx-small;    
+}
+
+DIV.rightfloatbox {
+	background: white;
+	padding: 1em;
+	margin-left: 1em;
+	margin-bottom: 1em;
+	border: solid black 1px;
+/*	border-left: solid black 1px;
+	border-bottom: solid black 1px; */
+	float: right;
+/*	text-align: right; */
+}
+
+HR {
+	border: none;
+	border-top: solid black 2px;
+}
+
+PRE.enscript {
+	background: #cccccc;
+	padding-left: 2em;
+	padding-top: 0.25em;
+	padding-bottom: 0.25em;
+	padding-right: 2em;
+}
+
+DIV.missingsublanguage {
+	background: red;
+	color: white;
+	padding: 0.25em;
+}
+
+SPAN.missingspanhandler {
+	background: red;
+	color: white;
+}
+
+A.footnoteref {
+	vertical-align: super;
+	font-size: smaller;
+	line-height: normal;
+}
+
+table {
+   border-left: solid grey 1px;
+   border-top: solid grey 1px;
+}
+td {
+   border-right: solid grey 1px;
+   border-bottom: solid grey 1px;
+   padding: 0.5em;
+}
+
+/*---------------------------------------------------------------------------*/
+/* TABLE OF CONTENTS */
+
+div.toc {
+	background: #eeeeee;
+	border: solid black 1px;
+	padding: 0.5em;
+	margin: 1em;
+}
+
+div.toc h4 {
+	color: #aa3311;
+	margin: 0pt;
+	margin-bottom: 1em;
+}
+
+div.toc A {
+	color: #aa3311;
+/*	font-family: Helvetica; */
+}
+
+div.toc ul {
+	margin: 0pt;
+}
+
+/*---------------------------------------------------------------------------*/
+/* ESSAYS */
+
+div.essay_body {
+	width: 590px;
+	border-right: solid black 1px;
+	padding-right: 10px;
+	font-family: 'georgia', 'times new roman', serif;
+}
+
+div.sidebar {
+	width: 190px;
+	font-size: smaller;
+	padding: 5px;
+	position: absolute;
+	left: 610px;
+}

@@ -101,20 +101,20 @@ class List(Renderable):
     def templateName(self):
 	return 'pyle_list'
 
-class Division(Renderable):
+class Container(Renderable):
     def __init__(self, klass = ''):
 	self.klass = klass
-	self.division_items = []
+	self.container_items = []
 
     def addItem(self, item):
-	self.division_items.append(item)
+	self.container_items.append(item)
 
     def templateName(self):
-	return 'pyle_division'
+	return 'pyle_container'
 
-class Section(Division):
+class Section(Container):
     def __init__(self, rank, titleline, doc):
-	Division.__init__(self)
+	Container.__init__(self)
 	self.rank = rank
 	self.titleline = titleline
 
@@ -170,7 +170,7 @@ class PyleBlockParser(Block.BasicWikiMarkup):
     def pop_acc(self):
 	self.accumulator = self.stack.pop()
 
-    def push_and_visit(self, container, kids):
+    def push_visit_pop(self, container, kids):
 	self.push_acc(container)
 	self.visit(kids)
 	self.pop_acc()

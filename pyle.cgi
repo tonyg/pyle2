@@ -14,6 +14,7 @@ urls = (
     '/([^/]*)/edit', 'edit',
     '/([^/]*)/delete', 'delete',
     '/([^/]*)/mediacache/(.*)', 'mediacache',
+    '/([^/]*)/static/style.css', 'style',
     )
 
 def mac(str):
@@ -99,5 +100,12 @@ class edit(PageAction):
 
     def templateName(self):
         return 'action_edit'
+
+class style:
+    def GET(self, pagename):
+	web.header('Content-Type', 'text/css')
+	f = open('static/style.css', 'rb')
+	web.output(f.read())
+	f.close()
 
 if __name__ == '__main__': web.run(urls, globals())

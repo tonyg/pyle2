@@ -8,9 +8,34 @@ Hello, world!
  # third
 
 This is a test.
-Could *things* be like this?
+Could _*things*_ be like this?
 As concurrent as the π calculus.
 
 As concurrent as the π calculus.
 
 Hello! Try TestPage, and AmqpReliableTransferNotes.
+
+@table (-,1,style="font-weight:bold") (2,2,colspan="2") (1,2-,style="font-style:italic") (1,4,colspan="3")
+  Cell 1          || Cell 2 || Cell 3
+
+  Another couple      || More stuff goes
+  of cells            || in here
+    - nested list     ||   - another list
+    - second row      ||   - more
+                      ||
+  ----                || And of course more text never really
+                      || goes astray with [i examples] like
+  Another paragraph   || this.
+  containing rubbish. ||
+
+  Further || stuff
+  More    || things
+  Again   || stuff  || @dot
+          ||        ||  digraph G {
+          ||        ||    x -> y -> z;
+          ||        ||    z -> x;
+          ||        ||  }
+
+  A single long table cell. A single long table cell. A single
+  long table cell. A single long table cell. A single long table
+  cell.
