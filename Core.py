@@ -232,6 +232,7 @@ class Page(Renderable):
 
     def renderTree(self):
 	self.tree = []
+	self.mediacache = {}
 	doc = Block.parsestring(self.text)
 	PyleBlockParser(self).visit(doc.children)
 	self.saveTree()
