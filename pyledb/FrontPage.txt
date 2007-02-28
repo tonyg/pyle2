@@ -15,7 +15,7 @@ As concurrent as the π calculus.
 
 Hello! Try TestPage, and AmqpReliableTransferNotes.
 
-@table (-,1,style="font-weight:bold") (2,2,colspan="2") (1,2-,style="font-style:italic") (1,4,colspan="3")
+@table (-,1,style="font-weight:bold") (2,2,colspan="2") (1,2-,style="font-style:italic") (1,5,colspan="3")
   Cell 1          || Cell 2 || Cell 3
 
   Another couple      || More stuff goes
@@ -27,6 +27,8 @@ Hello! Try TestPage, and AmqpReliableTransferNotes.
                       || goes astray with [i examples] like
   Another paragraph   || this.
   containing rubbish. ||
+
+  Empty cell to the right || || empty cell to the left
 
   Further || stuff
   More    || things
