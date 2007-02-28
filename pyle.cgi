@@ -3,6 +3,7 @@
 from __future__ import generators
 import web
 import Core
+import RenderUtils
 import Config
 import base64
 import md5
@@ -94,6 +95,7 @@ class edit(PageAction):
         self.init_page(pagename)
         self.page.setText(self.input.body)
         self.page.save()
+	web.seeother(RenderUtils.InternalLink(self.page.title).url())
 
     def templateName(self):
         return 'action_edit'
