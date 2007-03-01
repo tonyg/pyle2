@@ -113,17 +113,6 @@ class ListItem(Paragraph):
     def templateName(self):
 	return 'pyle_listitem'
 
-class List(Renderable):
-    def __init__(self, is_ordered):
-	self.is_ordered = is_ordered
-	self.list_items = []
-
-    def addItem(self, item):
-	self.list_items.append(item)
-
-    def templateName(self):
-	return 'pyle_list'
-
 class Container(Renderable):
     def __init__(self, klass = ''):
 	self.klass = klass
@@ -135,6 +124,14 @@ class Container(Renderable):
 
     def templateName(self):
 	return 'pyle_container'
+
+class List(Container):
+    def __init__(self, is_ordered):
+        Container.__init__(self)
+	self.is_ordered = is_ordered
+
+    def templateName(self):
+	return 'pyle_list'
 
 class Section(Container):
     def __init__(self, rank, titleline, doc):
