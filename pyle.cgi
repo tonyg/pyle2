@@ -3,6 +3,7 @@
 from __future__ import generators
 import web
 import Core
+import Store
 import RenderUtils
 import Config
 import base64
@@ -32,8 +33,8 @@ class Action(Core.Renderable):
         self.recoverSession_()
         self.input = web.input(**self.defaultInputs())
         self.ctx = web.ctx
-        self.ctx.store = Core.FileStore(Config.filestore_dir)
-        self.ctx.cache = Core.FileStore(Config.cache_dir)
+        self.ctx.store = Store.FileStore(Config.filestore_dir)
+        self.ctx.cache = Store.FileStore(Config.cache_dir)
 
     def defaultInputs(self):
         return {
