@@ -7,9 +7,9 @@ import Store
 import RenderUtils
 import Config
 import base64
-import md5
 import pickle
 import User
+import hmac
 
 urls = (
     '/([^/]*)', 'read',
@@ -20,7 +20,7 @@ urls = (
     )
 
 def mac(str):
-    return md5.new(str + Config.session_passphrase).hexdigest()
+    return hmac.new(Config.session_passphrase, str).hexdigest()
 
 def newSession():
     return web.storage({
