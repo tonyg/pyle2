@@ -1,6 +1,7 @@
 <div class="pylesection pylesection$rank">
-#if $titleline
-  <h$rank>$titleline</h$rank>
+  <a name="$anchor"></a>
+#if $title
+  <h$rank>#echo '.'.join(map(str, $tocpath))# $title</h$rank>
 #end if
 #for $item in $container_items
 $item.render('html')

@@ -3,9 +3,32 @@
     <h1>$title</h1>
     <div class="clear"></div>
   </div>
+  <div class="toc">
+#set global $hastoc = 0
+#def buildtoc($sections, $depth)
+#if $sections
+#if $depth == 0
+#set global $hastoc = 1
+<a name="section_toc"></a>
+<h4 class="toctitle">Table of Contents</h4>
+#endif
+<ul class="toc level$depth">
+#for $section in $sections
+<li><a href="#$section.anchor">#echo '.'.join(map(str, $section.tocpath))# $section.title</a>$buildtoc($section.subsections, $depth + 1)</li>
+#end for
+</ul>
+#end if
+#end def
+$buildtoc($subsections, 0)
+  </div>
   <div class="body">
-#for $item in $tree
+#for $item in $container_items
 $item.render('html')
 #end for
   </div>
+#if $hastoc
+  <p>
+    <a href="#section_toc">Go to Table of Contents</a>
+  </p>
+#endif
 </div>

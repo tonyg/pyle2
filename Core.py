@@ -134,10 +134,27 @@ class List(Container):
 	return 'pyle_list'
 
 class Section(Container):
-    def __init__(self, rank, titleline, doc):
+    def __init__(self, rank, title):
 	Container.__init__(self)
 	self.rank = rank
-	self.titleline = titleline
+        self.tocpath = []
+        self.subsectioncount = 0
+	self.title = title
+
+    def subsections(self):
+        return [x for x in self.container_items if isinstance(x, Section)]
+
+    def notify_parent(self, newparent):
+        self.tocpath = newparent.alloc_toc_entry()
+
+    def alloc_toc_entry(self):
+        self.subsectioncount = self.subsectioncount + 1
+        entry = self.tocpath[:]
+        entry.append(self.subsectioncount)
+        return entry
+
+    def anchor(self):
+        return 'section_' + '_'.join([str(part) for part in self.tocpath])
 
     def templateName(self):
 	return 'pyle_section'
@@ -208,9 +225,9 @@ class PyleBlockParser(Block.BasicWikiMarkup):
     def visit_section(self, rank, titleline, doc):
 	while self.current_rank() >= rank:
 	    self.pop_acc()
-	while self.current_rank() < rank - 1:
-	    self.push_acc(Section(self.current_rank() + 1, None, None))
-	self.push_acc(Section(rank, titleline, doc))
+#	while self.current_rank() < rank - 1:
+#	    self.push_acc(Section(self.current_rank() + 1, None))
+	self.push_acc(Section(rank, titleline))
 
     def visit_separator(self):
 	self.add(Separator())
@@ -232,19 +249,19 @@ class PyleBlockParser(Block.BasicWikiMarkup):
     def visit_normal(self, para):
 	self.add(Paragraph(para))
 
-class Page(Renderable):
+class Page(Section):
     def __init__(self, store, cache, title):
+        Section.__init__(self, 0, title)
 	self.store = store
 	self.cache = cache
-	self.title = title
 	self.load_()
 
     def load_(self):
         self.meta = self.store.getpickle(self.title, 'meta', {})
         self.text = self.store.getitem(self.title, 'txt', '')
-	self.tree = self.cache.getpickle(self.title, 'tree', None)
+	self.container_items = self.cache.getpickle(self.title, 'tree', None)
 	self.mediacache = self.cache.getpickle(self.title, 'mediacache', {})
-	if self.tree is None:
+	if self.container_items is None:
 	    self.renderTree()
 
     def getmeta(self, name, defaultValue = ''):
@@ -268,18 +285,15 @@ class Page(Renderable):
 	self.renderTree()
 
     def renderTree(self):
-	self.tree = []
+	self.container_items = []
 	self.mediacache = {}
 	doc = Block.parsestring(self.text)
 	PyleBlockParser(self).visit(doc.children)
 	self.saveTree()
 
     def saveTree(self):
-	self.cache.setpickle(self.title, 'tree', self.tree)
+	self.cache.setpickle(self.title, 'tree', self.container_items)
 	self.cache.setpickle(self.title, 'mediacache', self.mediacache)
-
-    def addItem(self, item):
-	self.tree.append(item)
 
     def save(self, user):
         self.setmetadate('Date', time.time())
