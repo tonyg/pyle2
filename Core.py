@@ -18,6 +18,20 @@ class Renderable:
 	return Cheetah.Template.Template(file = templatename,
 					 searchList = (self, RenderUtils))
 
+    def notify_parent(self, newparent):
+        pass
+
+    def anchor(self):
+        return str(self.uuid())
+
+    def uuid(self):
+        try:
+            return self.uuid
+        except exceptions.AttributeError:
+            import uuid
+            self.uuid = uuid.uuid4()
+            return self.uuid
+
 class Store:
     def probe_kind(self):
 	return 'txt'
@@ -111,6 +125,7 @@ class Container(Renderable):
 
     def addItem(self, item):
 	self.container_items.append(item)
+        item.notify_parent(self)
 
     def templateName(self):
 	return 'pyle_container'
