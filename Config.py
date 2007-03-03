@@ -17,8 +17,8 @@ frontpage = 'FrontPage'
 linkpattern = r'\b([A-Z]+[a-z0-9]+){2,}'
 
 # Location of stored files
-#file_store = Store.FileStore('./pyledb')
-file_store = Store.CvsStore('./cvstest/data')
+file_store = Store.FileStore('./pyledb')
+#file_store = Store.CvsStore('./cvstest/data')
 cache_store = Store.FileStore('./pyledb_cache')
 
 # Use "enscript" to format @code blocks? Set to None to disable.
