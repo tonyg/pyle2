@@ -1,3 +1,4 @@
+import Config
 import web
 import cgi
 import Block
@@ -13,8 +14,11 @@ class Renderable:
     def render(self, format):
 	import RenderUtils
 	templatename = os.path.join('templates', self.templateName() + '.' + format)
+        extra = web.storage({
+            'Config': Config
+            })
 	return Cheetah.Template.Template(file = templatename,
-					 searchList = (self, RenderUtils))
+					 searchList = (self, RenderUtils, extra))
 
     def notify_parent(self, newparent):
         pass
