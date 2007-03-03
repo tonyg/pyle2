@@ -50,3 +50,7 @@ allow_anonymous_edit = True
 
 # Allow anonymous viewing of pages?
 allow_anonymous_view = True
+
+# When running a standalone FTP frontend to pyle, if running as root,
+# setuid to this user first:
+ftp_server_user = 'www-data'

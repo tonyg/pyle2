@@ -188,6 +188,7 @@ class Page(Section):
         Section.__init__(self, 0, title)
 	self.store = store
 	self.cache = cache
+        self.notify_required = False
 	self.load_()
 
     def load_(self):
@@ -215,6 +216,7 @@ class Page(Section):
         self.setmeta(name, rfc822.formatdate(t))
 
     def setText(self, newtext):
+        self.notify_required = self.notify_required or (self.text != newtext)
 	self.text = newtext
 	self.renderTree()
 
@@ -234,6 +236,18 @@ class Page(Section):
         self.setmeta('Modifier', user.getusername())
         self.store.setpickle(self.title, 'meta', self.meta)
 	self.store.setitem(self.title, 'txt', self.text)
+        self.notify_subscribers()
+
+    def notify_subscribers(self):
+        if self.notify_required:
+            ### FIXME: implement me
+            self.notify_required = False
+
+    def readable_for(self, user):
+        return not user.is_anonymous() or Config.allow_anonymous_view
+
+    def writable_for(self, user):
+        return not user.is_anonymous() or Config.allow_anonymous_edit
 
     def templateName(self):
 	return 'page'
