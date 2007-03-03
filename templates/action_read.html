@@ -42,6 +42,7 @@ last modified $escape($mtime)#slurp
  by $Config.anonymous_user)
 #end if
 	</div>
+	#if not $ctx.printmode
 	<div>
 	  $internal_link($page.title, 'edit', 'Edit this page') |
 	  #if not $user.is_anonymous
@@ -56,6 +57,7 @@ last modified $escape($mtime)#slurp
         </div>
 	#include $skinfile("common_page_footers.html")
       </div>
+      #end if
     </div>
   </body>
 </html>
