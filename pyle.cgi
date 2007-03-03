@@ -194,7 +194,8 @@ class delete(PageAction):
             self.init_page(pagename)
             self.page.delete(self.user())
             web.seeother(RenderUtils.InternalLink(self.page.title).url())
-        PageAction.handle_request(self, pagename)
+        else:
+            PageAction.handle_request(self, pagename)
 
     def templateName(self):
         return 'action_delete'
