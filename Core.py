@@ -215,7 +215,13 @@ class Page(Section):
     def setmetadate(self, name, t):
         self.setmeta(name, rfc822.formatdate(t))
 
+    def _preprocess(self, s):
+        s = s.replace('\r\n', '\n')
+        s = s.replace('\r', '\n')
+        return s
+
     def setText(self, newtext):
+        newtext = self._preprocess(newtext)
         self.notify_required = self.notify_required or (self.text != newtext)
 	self.text = newtext
 	self.renderTree()
