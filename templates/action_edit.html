@@ -8,9 +8,11 @@
       #include "templates/common_page_headers.html"
       <h1>Edit $page.title</h1>
       <form name="editform" method="post" action="$ctx.home/$page.title/save">
-	<textarea name="body" cols="80" rows="25">$escape($page.text)</textarea>
-	<br />
-	<input type="Submit" name="save" value="Save" />
+	<div class="editform">
+	  <textarea name="body" cols="80" rows="25">$escape($page.text)</textarea>
+	  <br />
+	  <input type="Submit" name="save" value="Save" />
+	</div>
       </form>
       <p>
 	$internal_link($page.title, vistext = 'Cancel changes made, and view this page as currently saved')
