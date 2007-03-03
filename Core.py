@@ -291,4 +291,4 @@ class Page(Section):
         return not user.is_anonymous() or Config.allow_anonymous_edit
 
     def templateName(self):
-	return 'page'
+	return 'pyle_page'
