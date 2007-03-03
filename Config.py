@@ -14,8 +14,8 @@ frontpage = 'FrontPage'
 linkpattern = r'\b([A-Z]+[a-z0-9]+){2,}'
 
 # Location of stored files
-filestore_dir = './pyledb'
-cache_dir = './pyledb_cache'
+file_store = Store.FileStore('./pyledb')
+cache_store = Store.FileStore('./pyledb_cache')
 
 # Use "enscript" to format @code blocks? Set to None to disable.
 code_enscript_command = '/usr/bin/env enscript'

@@ -46,8 +46,8 @@ class Action(Core.Renderable):
         self.recoverSession_()
         self.input = web.input(**self.defaultInputs())
         self.ctx = web.ctx
-        self.ctx.store = Store.FileStore(Config.filestore_dir)
-        self.ctx.cache = Store.FileStore(Config.cache_dir)
+        self.ctx.store = Config.file_store
+        self.ctx.cache = Config.cache_store
 
     def defaultInputs(self):
         return {
