@@ -11,7 +11,7 @@ This is a test.
 Could _*things*_ be like this?
 As concurrent as the π calculus.
 
-As concurrent as the π calculus. SandBox.
+As concurrent as the π calculus. SandBox. See [bug 1]
 
 Hello! Try TestPage, and AmqpReliableTransferNotes.
 
