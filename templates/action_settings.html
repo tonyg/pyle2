@@ -5,9 +5,12 @@
   </head>
   <body>
     <div class="container">
-      #include "templates/common_page_headers.html"
       <div class="settings">
-	<h1>Preferences for $user.username</h1>
+	<div class="title">
+	  #include "templates/common_page_headers.html"
+	  <h1>Preferences for $user.username</h1>
+	  <div class="clear"></div>
+	</div>
 
 	#if $changes_saved
 	<p>

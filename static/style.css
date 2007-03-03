@@ -93,8 +93,21 @@ DIV.rightfloatbox {
 	clear: both;
 }
 
+.title {
+	padding-bottom: 1em;
+	margin-bottom: 1em;
+	border-bottom: solid #006ee5 1px;
+
+	padding-top: 1em;
+	border-top: solid #006ee5 1px;
+}
+
 .title h1 {
 	margin-bottom: 0.4em;
+}
+
+.title h1 a {
+	text-decoration: none;
 }
 
 HR {
@@ -140,6 +153,7 @@ td {
 .footer {
 	border-top: solid #006ee5 1px;
 	margin-top: 1em;
+	padding-top: 1em;
 }
 
 /*---------------------------------------------------------------------------*/

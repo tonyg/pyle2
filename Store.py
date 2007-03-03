@@ -1,3 +1,4 @@
+import re
 import pickle
 import os
 import glob
@@ -37,6 +38,13 @@ class Store:
 
     def __get__(self, title):
 	return self.page(title)
+
+    def search(self, keywords):
+        regexes = [re.compile(re.escape(k), re.IGNORECASE) for k in keywords]
+        return self.search_regexes(regexes)
+
+    def search_regexes(self, regexes):
+        subClassResponsibility()
 
 class FileStore(Store):
     def __init__(self, dirname):
@@ -89,6 +97,18 @@ class FileStore(Store):
                 pass
             else:
                 raise exceptions.KeyError((title, kind))
+
+    def search_regexes(self, regexes):
+        result = []
+        for key in self.keys():
+            text = self.getitem(key, 'txt', '')
+            score = 0
+            for r in regexes:
+                score = score + len(r.findall(text)) + len(r.findall(key))
+            if score:
+                result.append((score, key))
+        result.sort(None, lambda r: r[0], True)
+        return result
 
     def commit(self):
 	pass

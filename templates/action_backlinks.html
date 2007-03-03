@@ -1,18 +1,19 @@
 <html>
   <head>
-    <title>Pyle: Login</title>
+    <title>Pyle: Backlinks for $escape($page.title)</title>
     #include "templates/common_html_headers.html"
   </head>
   <body>
     <div class="container">
       <div class="title">
 	#include "templates/common_page_headers.html"
+	<h1>$internal_link($page.title)</h1>
 	<div class="clear"></div>
       </div>
-      <div class="logoutmessage">
-	You have been logged out.
-	<a href="$ctx.home">Click here to continue.</a>
-      </div>
+      <p>
+	These pages link to $internal_link($page.title):
+      </p>
+      #include "templates/pyle_backlinks.html"
     </div>
   </body>
 </html>

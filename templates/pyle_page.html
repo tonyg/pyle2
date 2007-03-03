@@ -1,22 +1,4 @@
 <div class="pylepage">
-  <form method="get" action="$internal_link_url('_', 'follow_backlink')">
-    <div class="title">
-      <h1>$title</h1>
-      #set $allbacklinks = $backlinks
-      #if $allbacklinks and not $ctx.printmode
-      <p>
-	Backlinks:
-	<select name="page">
-	  #for $backlink in $allbacklinks
-	  <option>$escape($backlink)</option>
-	  #end for
-	</select>
-	<input type="submit" name="submit" value="Go" />
-      </p>
-      #end if
-      <div class="clear"></div>
-    </div>
-  </form>
 #def buildtoc($sections, $depth)
 #if $sections
       <ul class="toc level$depth">

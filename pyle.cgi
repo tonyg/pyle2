@@ -16,6 +16,7 @@ import os
 urls = (
     '/([^/]*)', 'read',
     '/([^/]*)/print', 'printmode',
+    '/([^/]*)/backlinks', 'backlinks',
     '/([^/]*)/subscribe', 'subscribe',
     '/([^/]*)/edit', 'edit',
     '/([^/]*)/save', 'save',
@@ -25,6 +26,7 @@ urls = (
     '/_/settings', 'settings',
     '/_/follow_backlink', 'follow_backlink',
     '/_/logout', 'logout',
+    '/_/search', 'search',
     )
 
 def mac(str):
@@ -51,6 +53,7 @@ class Action(Core.Renderable):
         self.ctx = web.ctx
         self.ctx.store = Config.file_store
         self.ctx.cache = Config.cache_store
+        self.ctx.printmode = False
 
     def defaultInputs(self):
         return {
@@ -139,7 +142,6 @@ class PageAction(Action):
                 pagename = Config.frontpage
             self.pagename = pagename
             self.page = Core.Page(self.ctx.store, self.ctx.cache, pagename)
-            self.ctx.printmode = False
 
     def login_required(self):
         return not Config.allow_anonymous_view
@@ -159,6 +161,13 @@ class printmode(PageAction):
     def templateName(self):
         return 'action_read'
 
+class backlinks(PageAction):
+    def prerender(self, format):
+        self.backlinks = self.page.backlinks()
+
+    def templateName(self):
+        return 'action_backlinks'
+
 class mediacache(PageAction):
     def handle_request(self, pagename, cachepath):
         self.init_page(pagename)
@@ -167,6 +176,9 @@ class mediacache(PageAction):
         web.output(bytes)
 
 class subscribe(PageAction):
+    def login_required(self):
+        return True
+
     def handle_request(self, pagename):
         self.init_page(pagename)
         self.subscription_status = not self.user().is_subscribed_to(pagename)
@@ -250,5 +262,19 @@ class logout(Action):
 
     def templateName(self):
         return 'action_logout'
+
+class search(Action):
+    def handle_request(self):
+        self.keywords = [k for k in self.input.get('q', '').split(' ') if k]
+        if self.keywords:
+            self.ran_search = True
+            self.results = self.ctx.store.search(self.keywords)
+        else:
+            self.ran_search = False
+            self.results = []
+        Action.handle_request(self)
+
+    def templateName(self):
+        return 'action_search'
 
 if __name__ == '__main__': web.run(urls, globals())

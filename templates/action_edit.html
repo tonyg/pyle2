@@ -5,8 +5,12 @@
   </head>
   <body>
     <div class="container">
-      #include "templates/common_page_headers.html"
-      <h1>Edit $page.title</h1>
+      <div class="title">
+	#include "templates/common_page_headers.html"
+	<h1>Edit $page.title</h1>
+	<div class="clear"></div>
+      </div>
+
       <form name="editform" method="post" action="$ctx.home/$page.title/save">
 	<div class="editform">
 	  <textarea name="body" cols="80" rows="25">$escape($page.text)</textarea>

@@ -1,0 +1,41 @@
+<html>
+  <head>
+    <title>Pyle: Search #echo ' '.join($keywords)#</title>
+    #include "templates/common_html_headers.html"
+  </head>
+  <body>
+    <div class="container">
+      <div class="title">
+	#include "templates/common_page_headers.html"
+	<h1>Search</h1>
+	<div class="clear"></div>
+      </div>
+      <form name="searchform" method="get" action="$ctx.home/_/search">
+	<div class="searchform">
+	  Keywords:
+	  <input type="text" name="q" value="#echo ' '.join($keywords)#" />
+	  <input type="submit" name="submit" value="Go" />
+	</div>
+      </form>
+      #if $ran_search
+      #if $results
+      <p>
+	Searching for $keywords returned $len($results) results:
+      </p>
+      <ul class="searchresults">
+	#for ($score, $pagename) in $results
+	<li>$internal_link($pagename) ($score)</li>
+	#end for
+      </ul>
+      #else
+      <p>
+	Your search for $keywords returned no results.
+      </p>
+      #end if
+      #end if
+      <div class="footer">
+	#include "templates/common_page_footers.html"
+      </div>
+    </div>
+  </body>
+</html>
