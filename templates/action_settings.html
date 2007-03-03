@@ -1,11 +1,11 @@
 <html>
   <head>
     <title>Pyle: Preferences for $escape($user.username)</title>
-    <link rel="stylesheet" type="text/css" href="$ctx.home/_/static/style.css"
-	  title="Pyle Stylesheet" media="screen">
+    #include "templates/common_html_headers.html"
   </head>
   <body>
     <div class="container">
+      #include "templates/common_page_headers.html"
       <div class="settings">
 	<h1>Preferences for $user.username</h1>
 
@@ -58,6 +58,9 @@
 	    <input type="submit" name="submit" value="Save Changes" />
 	  </div>
 	</form>
+      </div>
+      <div class="footer">
+	#include "templates/common_page_footers.html"
       </div>
     </div>
   </body>
