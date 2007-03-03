@@ -81,12 +81,16 @@ class BugzillaAuthenticator(Authenticator):
         self.other_inputs = other_inputs
 
     def authenticate(self, user, password):
+        if user.is_anonymous():
+            return False
+
         inputs = [(self.login_input, user.getusername()),
                   (self.password_input, password)] + self.other_inputs
         data = urllib.urlencode(inputs)
         resulthandle = urllib.urlopen(self.url, data)
         result = resulthandle.read()
         resulthandle.close()
+
         if self.success_regex.search(result):
             return True
         else:
