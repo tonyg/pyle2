@@ -15,6 +15,7 @@ import os
 
 urls = (
     '/([^/]*)', 'read',
+    '/([^/]*)/print', 'printmode',
     '/([^/]*)/subscribe', 'subscribe',
     '/([^/]*)/edit', 'edit',
     '/([^/]*)/save', 'save',
@@ -22,6 +23,7 @@ urls = (
     '/([^/]*)/mediacache/(.*)', 'mediacache',
     '/_/static/([^/]+)', 'static',
     '/_/settings', 'settings',
+    '/_/follow_backlink', 'follow_backlink',
     '/_/logout', 'logout',
     )
 
@@ -36,7 +38,6 @@ def newSession():
 class LoginPage(Core.Renderable):
     def __init__(self, action, login_failed):
         self.action = action
-        self.ctx = action.ctx
         self.login_failed = login_failed
 
     def templateName(self):
@@ -138,6 +139,7 @@ class PageAction(Action):
                 pagename = Config.frontpage
             self.pagename = pagename
             self.page = Core.Page(self.ctx.store, self.ctx.cache, pagename)
+            self.ctx.printmode = False
 
     def login_required(self):
         return not Config.allow_anonymous_view
@@ -147,6 +149,13 @@ class PageAction(Action):
         Action.handle_request(self)
 
 class read(PageAction):
+    def templateName(self):
+        return 'action_read'
+
+class printmode(PageAction):
+    def prerender(self, format):
+        self.ctx.printmode = True
+
     def templateName(self):
         return 'action_read'
 
@@ -183,7 +192,7 @@ class save(PageAction):
         self.init_page(pagename)
         self.page.setText(self.input.body)
         self.page.save(self.user())
-        web.seeother(RenderUtils.InternalLink(self.page.title).url())
+        web.seeother(RenderUtils.internal_link_url(self.page.title))
 
 class delete(PageAction):
     def login_required(self):
@@ -193,7 +202,7 @@ class delete(PageAction):
         if self.input.get('delete_confirmed', ''):
             self.init_page(pagename)
             self.page.delete(self.user())
-            web.seeother(RenderUtils.InternalLink(self.page.title).url())
+            web.seeother(RenderUtils.internal_link_url(self.page.title))
         else:
             PageAction.handle_request(self, pagename)
 
@@ -208,15 +217,6 @@ class static:
             f = open(os.path.join('static', filename), 'rb')
             web.output(f.read())
             f.close()
-
-class logout(Action):
-    def handle_request(self):
-        self.session.username = None
-        self._user = None
-        Action.handle_request(self)
-
-    def templateName(self):
-        return 'action_logout'
 
 class settings(Action):
     def login_required(self):
@@ -237,5 +237,18 @@ class settings(Action):
 
     def templateName(self):
         return 'action_settings'
+
+class follow_backlink(Action):
+    def handle_request(self):
+        web.seeother(RenderUtils.internal_link_url(self.input.page))
+
+class logout(Action):
+    def handle_request(self):
+        self.session.username = None
+        self._user = None
+        Action.handle_request(self)
+
+    def templateName(self):
+        return 'action_logout'
 
 if __name__ == '__main__': web.run(urls, globals())

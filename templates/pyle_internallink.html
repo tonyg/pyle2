@@ -1,1 +1,5 @@
-<a class="#if $pageexists#wikilink#else#wikiword#end if#" href="$aescape($url)">$vistext</a>
+#if $ctx.printmode and not $pageexists
+$vistext#slurp
+#else
+<a class="#if $pageexists#wikilink#else#wikiword#end if#" href="$aescape($url)">$vistext</a>#slurp
+#end if

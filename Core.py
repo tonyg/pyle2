@@ -10,6 +10,7 @@ import sys
 import time
 import rfc822
 import User
+import re
 
 class Renderable:
     def render(self, format):
@@ -17,7 +18,8 @@ class Renderable:
 	import RenderUtils
 	templatename = os.path.join('templates', self.templateName() + '.' + format)
         extra = web.storage({
-            'Config': Config
+            'Config': Config,
+            'ctx': web.ctx,
             })
 	return Cheetah.Template.Template(file = templatename,
 					 searchList = (self, RenderUtils, extra))
@@ -197,7 +199,6 @@ class DefaultPageContent(Renderable):
 
 class PageChangeEmail(Renderable):
     def __init__(self, page):
-        self.ctx = web.ctx
         self.page = page
 
     def templateName(self):
@@ -233,6 +234,9 @@ class Page(Section):
 	self.mediacache = self.cache.getpickle(self.title, 'mediacache', {})
 	if self.container_items is None:
 	    self.renderTree()
+
+    def exists(self):
+        return self.store.has_key(self.title)
 
     def getmeta(self, name, defaultValue = ''):
         return self.meta.get(name, defaultValue)
@@ -288,6 +292,15 @@ class Page(Section):
         self.store.delitem(self.title, 'meta', ignore_missing = True)
         self.store.delitem(self.title, 'txt', ignore_missing = True)
         self.log_change('deleted', user)
+
+    def backlinks(self):
+        result = []
+        r = re.compile(r'\b' + re.escape(self.title) + r'\b')
+        for otherpage in self.store.keys():
+            othertext = self.store.getitem(otherpage, 'txt', '')
+            if r.search(othertext):
+                result.append(otherpage)
+        return result
 
     def subscribers(self):
         result = []

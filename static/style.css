@@ -41,18 +41,6 @@ H6 {
 	font-size: 9pt;
 }
 
-/*
-H1.wikipagetitle {
-	border-top: solid black 1px;
-	border-bottom: solid black 1px;
-	padding: 0.1em;
-	padding-top: 0.2em;
-	padding-left: 0.3em;
-	padding-bottom: 0.3em;
-	background: #d8ebff;
-}
-*/
-
 A {
 	color: #006ee5;
 }
@@ -89,6 +77,24 @@ DIV.rightfloatbox {
 	border-bottom: solid black 1px; */
 	float: right;
 /*	text-align: right; */
+}
+
+.floatleft {
+	float: left;
+	margin-right: 1em;
+}
+
+.floatright {
+	float: right;
+	margin-left: 1em;
+}
+
+.clear {
+	clear: both;
+}
+
+.title h1 {
+	margin-bottom: 0.4em;
 }
 
 HR {
@@ -129,6 +135,11 @@ td {
    border-right: solid grey 1px;
    border-bottom: solid grey 1px;
    padding: 0.5em;
+}
+
+.footer {
+	border-top: solid #006ee5 1px;
+	margin-top: 1em;
 }
 
 /*---------------------------------------------------------------------------*/

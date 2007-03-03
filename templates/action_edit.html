@@ -14,12 +14,14 @@
 	  <input type="Submit" name="save" value="Save" />
 	</div>
       </form>
+      #if $page.exists
       <p>
 	$internal_link($page.title, vistext = 'Cancel changes made, and view this page as currently saved')
       </p>
       <p>
 	$internal_link($page.title, service = 'delete', vistext = 'Delete this page')
       </p>
+      #end if
       <div class="footer">
 	#include "templates/common_page_footers.html"
       </div>

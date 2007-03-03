@@ -4,7 +4,7 @@
     #include "templates/common_html_headers.html"
   </head>
   <body>
-    <div class="container">
+    <div class="container#if $ctx.printmode# printmode#end if#">
       #include "templates/common_page_headers.html"
       <div class="pagecontainer">
 	$page.render('html')
@@ -33,6 +33,7 @@ last modified $escape($mtime)#slurp
 	  #else
 	  $internal_link($page.title, 'subscribe', 'Subscribe to this page')
 	  #end if
+	  | $internal_link($page.title, 'print', 'Print-friendly')
         </div>
 	#include "templates/common_page_footers.html"
       </div>
