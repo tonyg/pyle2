@@ -63,3 +63,6 @@ smtp_portnumber = 25
 # This email address is used as the "From" email address when sending
 # notification emails.
 daemon_email_address = 'pyle2-daemon@lshift.net'
+
+# For the bug spanhandler - template for linking to bugs.
+bug_url_template = 'https://extra.lshift.net/bugzilla/show_bug.cgi?id=%s'
