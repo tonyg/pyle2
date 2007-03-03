@@ -1,2 +1,2 @@
 The page "$title" does not currently exist.
-Please replace this default content.
+Feel free to replace this default content and so create it.
