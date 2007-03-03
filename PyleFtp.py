@@ -76,7 +76,7 @@ class PyleFtpFS(FtpServer.FlatFileSystem):
 		page = self._retrieve_page(filename)
 		if not page.writable_for(self.user):
 			raise FtpResponse(550, 'Delete permission denied')
-		page.delete()
+		page.delete(self.user)
 		self.log_action('dele', [filename])
 
 if __name__ == '__main__':

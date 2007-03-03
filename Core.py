@@ -255,6 +255,16 @@ class Page(Section):
         self.log_change('saved', user, savetime)
         self.notify_subscribers()
 
+    def reset_cache(self):
+        self.cache.delitem(self.title, 'tree', ignore_missing = True)
+        self.cache.delitem(self.title, 'mediacache', ignore_missing = True)
+
+    def delete(self, user):
+        self.reset_cache()
+        self.store.delitem(self.title, 'meta', ignore_missing = True)
+        self.store.delitem(self.title, 'txt', ignore_missing = True)
+        self.log_change('deleted', user)
+
     def notify_subscribers(self):
         if self.notify_required:
             ### FIXME: implement me

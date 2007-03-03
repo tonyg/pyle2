@@ -172,6 +172,20 @@ class save(PageAction):
         self.page.save(self.user())
         web.seeother(RenderUtils.InternalLink(self.page.title).url())
 
+class delete(PageAction):
+    def login_required(self):
+        return not Config.allow_anonymous_edit
+
+    def handle_request(self, pagename):
+        if self.input.get('delete_confirmed', ''):
+            self.init_page(pagename)
+            self.page.delete(self.user())
+            web.seeother(RenderUtils.InternalLink(self.page.title).url())
+        PageAction.handle_request(self, pagename)
+
+    def templateName(self):
+        return 'action_delete'
+
 class static:
     def GET(self, filename):
         if filename in ['.', '..', '']:
