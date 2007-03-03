@@ -4,9 +4,6 @@ import glob
 import exceptions
 
 class Store:
-    def probe_kind(self):
-	return 'txt'
-
     def keys(self):
         subClassResponsibility
 
@@ -44,6 +41,10 @@ class Store:
 class FileStore(Store):
     def __init__(self, dirname):
 	self.dirname = dirname
+        self.probe_kind = 'txt'
+
+    def set_probe_kind(self, new_probe_kind):
+        self.probe_kind = new_probe_kind
 
     def path_(self, title, kind):
 	p = os.path.join(self.dirname, title)
@@ -52,13 +53,13 @@ class FileStore(Store):
 	return p
 
     def keys(self):
-        globpattern = self.path_('*', self.probe_kind())
-        suffixlen = len(self.probe_kind()) + 1
+        globpattern = self.path_('*', self.probe_kind)
+        suffixlen = len(self.probe_kind) + 1
         prefixlen = len(globpattern) - suffixlen - 1
         return [filename[prefixlen:-suffixlen] for filename in glob.iglob(globpattern)]
 
     def has_key(self, title):
-	return os.path.exists(self.path_(title, self.probe_kind()))
+	return os.path.exists(self.path_(title, self.probe_kind))
 
     def file_open_mode_(self, base, is_binary):
         if is_binary:

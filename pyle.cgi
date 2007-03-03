@@ -15,6 +15,7 @@ import os
 
 urls = (
     '/([^/]*)', 'read',
+    '/([^/]*)/subscribe', 'subscribe',
     '/([^/]*)/edit', 'edit',
     '/([^/]*)/save', 'save',
     '/([^/]*)/delete', 'delete',
@@ -132,10 +133,11 @@ class Action(Core.Renderable):
 
 class PageAction(Action):
     def init_page(self, pagename):
-        if not pagename:
-            pagename = Config.frontpage
-        self.pagename = pagename
-        self.page = Core.Page(self.ctx.store, self.ctx.cache, pagename)
+        if not hasattr(self, 'page') or not self.page:
+            if not pagename:
+                pagename = Config.frontpage
+            self.pagename = pagename
+            self.page = Core.Page(self.ctx.store, self.ctx.cache, pagename)
 
     def login_required(self):
         return not Config.allow_anonymous_view
@@ -154,6 +156,17 @@ class mediacache(PageAction):
         (mimetype, bytes) = self.page.mediacache[cachepath]
         web.header('Content-Type', mimetype)
         web.output(bytes)
+
+class subscribe(PageAction):
+    def handle_request(self, pagename):
+        self.init_page(pagename)
+        self.subscription_status = not self.user().is_subscribed_to(pagename)
+        self.user().set_subscription(pagename, self.subscription_status)
+        self.user().save_properties()
+        PageAction.handle_request(self, pagename)
+
+    def templateName(self):
+        return 'action_subscribe'
 
 class edit(PageAction):
     def login_required(self):

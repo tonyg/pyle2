@@ -9,6 +9,7 @@ import traceback
 import sys
 import time
 import rfc822
+import User
 
 class Renderable:
     def render(self, format):
@@ -194,6 +195,27 @@ class DefaultPageContent(Renderable):
     def templateName(self):
         return 'default_page_content'
 
+class PageChangeEmail(Renderable):
+    def __init__(self, page):
+        self.ctx = web.ctx
+        self.page = page
+
+    def templateName(self):
+        return 'page_change'
+
+def send_emails(users, message_including_headers):
+    if users:
+        import smtplib
+        s = smtplib.SMTP(Config.smtp_hostname, Config.smtp_portnumber)
+        s.sendmail(Config.daemon_email_address, [u.email for u in users],
+                   normalize_newlines(message_including_headers).replace('\n', '\r\n'))
+        s.quit()
+
+def normalize_newlines(s):
+    s = s.replace('\r\n', '\n')
+    s = s.replace('\r', '\n')
+    return s
+
 class Page(Section):
     def __init__(self, store, cache, title):
         Section.__init__(self, 0, title)
@@ -229,9 +251,7 @@ class Page(Section):
         self.setmeta(name, rfc822.formatdate(t))
 
     def _preprocess(self, s):
-        s = s.replace('\r\n', '\n')
-        s = s.replace('\r', '\n')
-        return s
+        return normalize_newlines(s)
 
     def setText(self, newtext):
         newtext = self._preprocess(newtext)
@@ -257,7 +277,7 @@ class Page(Section):
         self.store.setpickle(self.title, 'meta', self.meta)
 	self.store.setitem(self.title, 'txt', self.text)
         self.log_change('saved', user, savetime)
-        self.notify_subscribers()
+        self.notify_subscribers(user)
 
     def reset_cache(self):
         self.cache.delitem(self.title, 'tree', ignore_missing = True)
@@ -269,9 +289,19 @@ class Page(Section):
         self.store.delitem(self.title, 'txt', ignore_missing = True)
         self.log_change('deleted', user)
 
-    def notify_subscribers(self):
-        if self.notify_required:
-            ### FIXME: implement me
+    def subscribers(self):
+        result = []
+        for username in Config.user_data_store.keys():
+            user = User.User(username)
+            if user.is_subscribed_to(self.title):
+                result.append(user)
+        return result
+
+    def notify_subscribers(self, currentuser):
+        if self.notify_required and Config.smtp_hostname:
+            notification = str(PageChangeEmail(self).render('email'))
+            send_emails([s for s in self.subscribers() if s != currentuser],
+                        notification)
             self.notify_required = False
 
     def log_change(self, event, user, when = None):

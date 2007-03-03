@@ -11,7 +11,6 @@
       </div>
       <div class="footer">
 	<div>
-	  $internal_link($page.title, 'edit', 'Edit this page')
 #set $version = $page.getmeta("version", "")
 #if $version
 (version $escape($version),
@@ -26,6 +25,14 @@ last modified $escape($mtime)#slurp
 #else
  by $Config.anonymous_user)
 #end if
+	</div>
+	<div>
+	  $internal_link($page.title, 'edit', 'Edit this page') |
+	  #if $user.is_subscribed_to($page.title)
+	  $internal_link($page.title, 'subscribe', 'Unsubscribe from this page')
+	  #else
+	  $internal_link($page.title, 'subscribe', 'Subscribe to this page')
+	  #end if
         </div>
 	#include "templates/common_page_footers.html"
       </div>

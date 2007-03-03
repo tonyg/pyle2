@@ -23,6 +23,17 @@ class User:
         self.subscriptions = props.get('subscriptions', [])
         self.superuser_flag = props.get('superuser_flag', False)
 
+    def is_subscribed_to(self, pagename):
+        return pagename in self.subscriptions
+
+    def set_subscription(self, pagename, should_subscribe):
+        if should_subscribe and not self.is_subscribed_to(pagename):
+            self.subscriptions.append(pagename)
+        elif not should_subscribe:
+            self.subscriptions = [s for s in self.subscriptions if s != pagename]
+        else:
+            pass
+
     def save_properties(self):
         props = {
             'email': self.email,
@@ -105,7 +116,15 @@ class BugzillaAuthenticator(Authenticator):
 
 anonymous = Anonymous()
 
+user_db_initialised = 0
+def init_user_db():
+    global user_db_initialised
+    if not user_db_initialised:
+        Config.user_data_store.set_probe_kind('user')
+        user_db_initialised = 1
+
 def lookup(username):
+    init_user_db()
     if username is None:
         return anonymous
     else:

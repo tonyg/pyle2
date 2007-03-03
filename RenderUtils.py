@@ -16,14 +16,17 @@ class InternalLink(Core.Renderable):
 	self.vistext = vistext
 
     def url(self):
-	if self.service and self.service != 'read':
-	    servicePart = '/' + self.service
-	else:
-	    servicePart = ''
-	return web.ctx.home + '/' + self.pagename + servicePart
+        return internal_link_url(self.pagename, self.service)
 
     def templateName(self):
 	return 'pyle_internallink'
+
+def internal_link_url(pagename, service = 'read'):
+    if service and service != 'read':
+        servicePart = '/' + service
+    else:
+        servicePart = ''
+    return web.ctx.home + '/' + pagename + servicePart
 
 def internal_link(pagename, service = 'read', vistext = None, format = 'html'):
     return InternalLink(pagename, service, vistext).render(format)

@@ -54,3 +54,12 @@ allow_anonymous_view = True
 # When running a standalone FTP frontend to pyle, if running as root,
 # setuid to this user first:
 ftp_server_user = 'www-data'
+
+# Hostname and port of SMTP server to use when sending notification
+# emails. Set to None to disable email sending.
+smtp_hostname = 'smtp.lshift.net'
+smtp_portnumber = 25
+
+# This email address is used as the "From" email address when sending
+# notification emails.
+daemon_email_address = 'pyle2-daemon@lshift.net'
