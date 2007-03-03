@@ -18,12 +18,13 @@
 #else
 (#slurp
 #end if
-last modified $escape($page.getmeta("Date", "<unknown>"))#slurp
+#set $mtime = $page.getmeta("Date", "")
+last modified $escape($mtime)#slurp
 #set $modifier = $page.getmeta("Modifier", "")
 #if $modifier
  by $modifier)
 #else
-)
+ by $Config.anonymous_user)
 #end if
         </div>
 	#include "templates/common_page_footers.html"
