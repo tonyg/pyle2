@@ -35,6 +35,7 @@ def newSession():
 class LoginPage(Core.Renderable):
     def __init__(self, action, login_failed):
         self.action = action
+        self.ctx = action.ctx
         self.login_failed = login_failed
 
     def templateName(self):

@@ -14,7 +14,7 @@
 	<a href="$Config.user_creation_service">click here to create one.</a>
 	#end if
       </p>
-      <form method="post" action="$action.ctx.home$action.ctx.path">
+      <form method="post" action="$ctx.home$ctx.path">
 	<div class="loginform">
 #for $k, $v in $action.input.items()
 #if $k != 'Pyle_username' and $k != 'Pyle_password' and $k != 'Pyle_loginbutton'
