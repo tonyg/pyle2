@@ -1,11 +1,11 @@
 <html>
   <head>
     <title>Pyle: $escape($page.title)</title>
-    <link rel="stylesheet" type="text/css" href="$ctx.home/_/static/style.css"
-	  title="Pyle Stylesheet" media="screen">
+    #include "templates/common_html_headers.html"
   </head>
   <body>
     <div class="container">
+      #include "templates/common_page_headers.html"
       <div class="pagecontainer">
 	$page.render('html')
       </div>
@@ -21,25 +21,7 @@
 )
 #end if
         </div>
-#if $user.is_anonymous():
-	<div>
-	  You are not logged in.
-	  #if $Config.user_creation_service
-	  <a href="$ctx.home/_/settings">Click here to log in</a>, or
-	  <a href="$Config.user_creation_service">here to create an account</a>.
-	  #else
-	  <a href="$ctx.home/_/settings">Click here to log in.</a>
-	  #end if
-	</div>
-#else
-	<div>
-	  You are logged in as $user.username.
-	  <a href="$ctx.home/_/settings">Click here to change your settings.</a>
-	</div>
-	<div>
-	  <a href="$ctx.home/_/logout">Log out</a>
-	</div>
-#end if
+	#include "templates/common_page_footers.html"
       </div>
     </div>
   </body>
