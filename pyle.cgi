@@ -11,6 +11,7 @@ import pickle
 import User
 import hmac
 import urllib
+import os
 
 urls = (
     '/([^/]*)', 'read',
@@ -18,7 +19,7 @@ urls = (
     '/([^/]*)/save', 'save',
     '/([^/]*)/delete', 'delete',
     '/([^/]*)/mediacache/(.*)', 'mediacache',
-    '/_/static/style.css', 'style',
+    '/_/static/([^/]+)', 'static',
     '/_/settings', 'settings',
     '/_/logout', 'logout',
     )
@@ -170,12 +171,14 @@ class save(PageAction):
         self.page.save(self.user())
         web.seeother(RenderUtils.InternalLink(self.page.title).url())
 
-class style:
-    def GET(self):
-	web.header('Content-Type', 'text/css')
-	f = open('static/style.css', 'rb')
-	web.output(f.read())
-	f.close()
+class static:
+    def GET(self, filename):
+        if filename in ['.', '..', '']:
+            web.ctx.status = '403 Forbidden'
+        else:
+            f = open(os.path.join('static', filename), 'rb')
+            web.output(f.read())
+            f.close()
 
 class logout(Action):
     def handle_request(self):
