@@ -110,6 +110,10 @@ DIV.rightfloatbox {
 	text-decoration: none;
 }
 
+.title .backlinks {
+	float: right;
+}
+
 HR {
 	border: none;
 	border-top: solid black 2px;

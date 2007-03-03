@@ -1,17 +1,17 @@
 <html>
   <head>
     <title>Pyle: $escape($page.title)</title>
-    #include "templates/common_html_headers.html"
+    #include $skinfile("common_html_headers.html")
   </head>
   <body>
     <div class="container#if $ctx.printmode# printmode#end if#">
-      <form method="get" action="$internal_link_url('_', 'follow_backlink')">
-	<div class="title">
-	  #include "templates/common_page_headers.html"
-	  <h1>$internal_link($page.title, 'backlinks', $page.title)</h1>
-	  #set $allbacklinks = $page.backlinks
-	  #if $allbacklinks and not $ctx.printmode
-	  <p>
+      <div class="title">
+	#include $skinfile("common_page_headers.html")
+	<h1>$internal_link($page.title, 'backlinks', $page.title)</h1>
+	#set $allbacklinks = $page.backlinks
+	#if $allbacklinks and not $ctx.printmode
+	<form method="get" action="$internal_link_url('_', 'follow_backlink')">
+	  <div class="backlinks">
 	    Backlinks:
 	    <select name="page">
 	      #for $backlink in $allbacklinks
@@ -19,11 +19,11 @@
 	      #end for
 	    </select>
 	    <input type="submit" name="submit" value="Go" />
-	  </p>
-	  #end if
-	  <div class="clear"></div>
-	</div>
-      </form>
+	  </div>
+	</form>
+	#end if
+	<div class="clear"></div>
+      </div>
       $page.render('html')
       <div class="footer">
 	<div>
@@ -54,7 +54,7 @@ last modified $escape($mtime)#slurp
 	  #end if
 	  $internal_link($page.title, 'print', 'Print-friendly')
         </div>
-	#include "templates/common_page_footers.html"
+	#include $skinfile("common_page_footers.html")
       </div>
     </div>
   </body>

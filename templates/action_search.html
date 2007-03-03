@@ -1,12 +1,12 @@
 <html>
   <head>
     <title>Pyle: Search #echo ' '.join($keywords)#</title>
-    #include "templates/common_html_headers.html"
+    #include $skinfile("common_html_headers.html")
   </head>
   <body>
     <div class="container">
       <div class="title">
-	#include "templates/common_page_headers.html"
+	#include $skinfile("common_page_headers.html")
 	<h1>Search</h1>
 	<div class="clear"></div>
       </div>
@@ -34,7 +34,7 @@
       #end if
       #end if
       <div class="footer">
-	#include "templates/common_page_footers.html"
+	#include $skinfile("common_page_footers.html")
       </div>
     </div>
   </body>

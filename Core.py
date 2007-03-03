@@ -12,14 +12,18 @@ import rfc822
 import User
 import re
 
+def skinfile(file):
+    return os.path.join(Config.skin, file)
+
 class Renderable:
     def render(self, format):
         self.prerender(format)
 	import RenderUtils
-	templatename = os.path.join('templates', self.templateName() + '.' + format)
+	templatename = skinfile(self.templateName() + '.' + format)
         extra = web.storage({
             'Config': Config,
             'ctx': web.ctx,
+            'skinfile': skinfile,
             })
 	return Cheetah.Template.Template(file = templatename,
 					 searchList = (self, RenderUtils, extra))

@@ -4,6 +4,9 @@
 import User
 import Store
 
+# Skin to use for display.
+skin = 'templates'
+
 # Session signing passphrase (erk)
 session_passphrase = 'changeit'
 
