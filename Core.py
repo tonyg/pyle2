@@ -183,6 +183,13 @@ class PyleBlockParser(Block.BasicWikiMarkup):
     def visit_normal(self, para):
 	self.add(Paragraph(para))
 
+class DefaultPageContent(Renderable):
+    def __init__(self, title):
+        self.title = title
+
+    def templateName(self):
+        return 'default_page_content'
+
 class Page(Section):
     def __init__(self, store, cache, title):
         Section.__init__(self, 0, title)
@@ -193,7 +200,9 @@ class Page(Section):
 
     def load_(self):
         self.meta = self.store.getpickle(self.title, 'meta', {})
-        self.text = self.store.getitem(self.title, 'txt', '')
+        self.text = self.store.getitem(self.title, 'txt', None)
+        if self.text is None:
+            self.text = str(DefaultPageContent(self.title).render('txt'))
 	self.container_items = self.cache.getpickle(self.title, 'tree', None)
 	self.mediacache = self.cache.getpickle(self.title, 'mediacache', {})
 	if self.container_items is None:
