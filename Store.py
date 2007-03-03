@@ -1,9 +1,13 @@
 import pickle
 import os
+import glob
 
 class Store:
     def probe_kind(self):
 	return 'txt'
+
+    def keys(self):
+        subClassResponsibility
 
     def has_key(self, title):
 	subClassResponsibility()
@@ -42,6 +46,12 @@ class FileStore(Store):
 	if kind is not None:
 	    p = p + '.' + kind
 	return p
+
+    def keys(self):
+        globpattern = self.path_('*', self.probe_kind())
+        suffixlen = len(self.probe_kind()) + 1
+        prefixlen = len(globpattern) - suffixlen - 1
+        return [filename[prefixlen:-suffixlen] for filename in glob.iglob(globpattern)]
 
     def has_key(self, title):
 	return os.path.exists(self.path_(title, self.probe_kind()))
