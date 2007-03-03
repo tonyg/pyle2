@@ -12,6 +12,7 @@ import rfc822
 
 class Renderable:
     def render(self, format):
+        self.prerender(format)
 	import RenderUtils
 	templatename = os.path.join('templates', self.templateName() + '.' + format)
         extra = web.storage({
@@ -19,6 +20,9 @@ class Renderable:
             })
 	return Cheetah.Template.Template(file = templatename,
 					 searchList = (self, RenderUtils, extra))
+
+    def prerender(self, format):
+        pass
 
     def notify_parent(self, newparent):
         pass
@@ -274,7 +278,10 @@ class Page(Section):
         if not when:
             when = time.time()
         oldchanges = self.cache.getpickle('changes', 'changelog', [])
-        oldchanges.append((event, user.username, when))
+        oldchanges.append({'page': self.title,
+                           'what': event,
+                           'who': user.username,
+                           'when': when})
         self.cache.setpickle('changes', 'changelog', oldchanges)
 
     def readable_for(self, user):

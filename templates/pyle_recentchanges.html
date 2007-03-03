@@ -1,0 +1,16 @@
+<div class="recentchanges">
+#import time
+#for ($day, $daychanges) in $changes_by_day_newest_first
+<h3 class="recentchanges dateline">$time.strftime('%A, %d %B %Y', $day)</h3>
+<ul>
+#for $change in $daychanges
+#set $eventtime = time.gmtime($change.get('when', 0))
+<li>
+  $internal_link($change.get('page', '?')):
+  - - - ($change.get('what', '?')) $change.get('who', '?')
+  - - - $time.strftime('%H:%M %Z', $eventtime)
+</li>
+#end for
+</ul>
+#end for
+</div>
