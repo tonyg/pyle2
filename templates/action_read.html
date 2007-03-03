@@ -8,6 +8,9 @@
       <div class="title">
 	#include $skinfile("common_page_headers.html")
 	<h1>$internal_link($page.title, 'backlinks', $page.title)</h1>
+	#if $page.version
+	<p>version $page.version</p>
+	#end if
 	#set $allbacklinks = $page.backlinks
 	#if $allbacklinks and not $ctx.printmode
 	<form method="get" action="$internal_link_url('_', 'follow_backlink')">
@@ -27,14 +30,8 @@
       $page.render('html')
       <div class="footer">
 	<div>
-#set $version = $page.getmeta("version", "")
-#if $version
-(version $escape($version),
-#else
-(#slurp
-#end if
 #set $mtime = $page.getmeta("Date", "")
-last modified $escape($mtime)#slurp
+(last modified $escape($mtime)#slurp
 #set $modifier = $page.getmeta("Modifier", "")
 #if $modifier
  by $modifier)
@@ -54,6 +51,7 @@ last modified $escape($mtime)#slurp
 	  |
 	  #end if
 	  $internal_link($page.title, 'print', 'Print-friendly')
+	  | $internal_link($page.title, 'history', 'Page History')
         </div>
 	#include $skinfile("common_page_footers.html")
       </div>

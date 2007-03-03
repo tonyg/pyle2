@@ -16,6 +16,7 @@ import os
 urls = (
     '/([^/]*)', 'read',
     '/([^/]*)/print', 'printmode',
+    '/([^/]*)/history', 'history',
     '/([^/]*)/backlinks', 'backlinks',
     '/([^/]*)/subscribe', 'subscribe',
     '/([^/]*)/edit', 'edit',
@@ -51,8 +52,8 @@ class Action(Core.Renderable):
         self.recoverSession_()
         self.input = web.input(**self.defaultInputs())
         self.ctx = web.ctx
-        self.ctx.store = Config.file_store
-        self.ctx.cache = Config.cache_store
+        self.ctx.store = Store.Transaction(Config.file_store)
+        self.ctx.cache = Store.Transaction(Config.cache_store)
         self.ctx.printmode = False
 
     def defaultInputs(self):
@@ -112,9 +113,13 @@ class Action(Core.Renderable):
     def login_required(self):
         return False
 
-    def render(self, format):
+    def commit(self):
         self.saveSession_()
         self.ctx.store.commit()
+        self.ctx.cache.commit()
+
+    def render(self, format):
+        self.commit()
         return Core.Renderable.render(self, format)
 
     def saveSession_(self):
@@ -126,6 +131,7 @@ class Action(Core.Renderable):
     def GET(self, *args):
         if self.ensure_login_if_required():
             self.handle_request(*args)
+            self.commit()
 
     def POST(self, *args):
         return self.GET(*args)
@@ -141,7 +147,11 @@ class PageAction(Action):
             if not pagename:
                 pagename = Config.frontpage
             self.pagename = pagename
-            self.page = Core.Page(self.ctx.store, self.ctx.cache, pagename)
+            if self.input.has_key('version'):
+                version = self.input.version
+            else:
+                version = None
+            self.page = Core.Page(self.ctx.store, self.ctx.cache, pagename, version)
 
     def login_required(self):
         return not Config.allow_anonymous_view
@@ -160,6 +170,10 @@ class printmode(PageAction):
 
     def templateName(self):
         return 'action_read'
+
+class history(PageAction):
+    def templateName(self):
+        return 'action_history'
 
 class backlinks(PageAction):
     def prerender(self, format):

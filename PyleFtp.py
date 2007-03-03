@@ -4,15 +4,20 @@ import FtpServer
 import Config
 import User
 import Core
+import Store
 import web
 
 class PyleFtpFS(FtpServer.FlatFileSystem):
 	def __init__(self, *args):
 		FtpServer.FlatFileSystem.__init__(self, *args)
-		self.file_store = Config.file_store
-		self.cache = Config.cache_store
+		self.file_store = Store.Transaction(Config.file_store)
+		self.cache = Store.Transaction(Config.cache_store)
 		web.load()
 		web.ctx.store = self.file_store
+
+	def commit_transaction(self):
+		self.file_store.commit()
+		self.cache.commit()
 
 	def log_action(self, action, argl):
 		import time
@@ -70,6 +75,7 @@ class PyleFtpFS(FtpServer.FlatFileSystem):
 		page = self._retrieve_page(filename)
 		page.setText(newcontent)
 		page.save(self.user)
+		self.commit_transaction()
 		self.log_action('stor', [filename])
 
 	def deleteContent(self, filename):
@@ -77,6 +83,7 @@ class PyleFtpFS(FtpServer.FlatFileSystem):
 		if not page.writable_for(self.user):
 			raise FtpResponse(550, 'Delete permission denied')
 		page.delete(self.user)
+		self.commit_transaction()
 		self.log_action('dele', [filename])
 
 if __name__ == '__main__':

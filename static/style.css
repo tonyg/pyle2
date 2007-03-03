@@ -1,4 +1,4 @@
-body, li, td {
+body, li, td, th {
 /*	font-family: Arial,Lucida,Helvetica,sans-serif;  */
 	font-family: 'georgia', 'times new roman', serif;
 	font-size: 9pt;
@@ -148,7 +148,7 @@ table {
    border-left: solid grey 1px;
    border-top: solid grey 1px;
 }
-td {
+td, th {
    border-right: solid grey 1px;
    border-bottom: solid grey 1px;
    padding: 0.5em;

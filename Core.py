@@ -222,22 +222,37 @@ def normalize_newlines(s):
     return s
 
 class Page(Section):
-    def __init__(self, store, cache, title):
+    def __init__(self, store, cache, title, version = None):
         Section.__init__(self, 0, title)
 	self.store = store
 	self.cache = cache
+        self.version = version
         self.notify_required = False
 	self.load_()
 
     def load_(self):
-        self.meta = self.store.getpickle(self.title, 'meta', {})
-        self.text = self.store.getitem(self.title, 'txt', None)
+        self.meta = self.store.getpickle(self.title, 'meta', {}, self.version)
+        self.text = self.store.getitem(self.title, 'txt', None, self.version)
         if self.text is None:
             self.text = str(DefaultPageContent(self.title).render('txt'))
-	self.container_items = self.cache.getpickle(self.title, 'tree', None)
-	self.mediacache = self.cache.getpickle(self.title, 'mediacache', {})
-	if self.container_items is None:
+        if self.version:
+            self.container_items = None
+            self.mediacache = {}
+        else:
+            self.container_items = self.cache.getpickle(self.title, 'tree', None)
+            self.mediacache = self.cache.getpickle(self.title, 'mediacache', {})
+        if self.container_items is None:
 	    self.renderTree()
+
+    def newest_stored_version(self):
+        return self.store.current_version_id(self.title, 'txt')
+
+    def history(self):
+        entries = self.store.gethistory(self.title, 'txt')
+        for entry in entries:
+            meta = self.store.getpickle(self.title, 'meta', {}, entry.version_id)
+            entry.who = meta.get('Modifier', '') or Config.anonymous_user
+        return entries
 
     def exists(self):
         return self.store.has_key(self.title)
@@ -275,8 +290,9 @@ class Page(Section):
 	self.saveTree()
 
     def saveTree(self):
-	self.cache.setpickle(self.title, 'tree', self.container_items)
-	self.cache.setpickle(self.title, 'mediacache', self.mediacache)
+        if not self.version:
+            self.cache.setpickle(self.title, 'tree', self.container_items)
+            self.cache.setpickle(self.title, 'mediacache', self.mediacache)
 
     def save(self, user):
         savetime = time.time()
@@ -288,13 +304,13 @@ class Page(Section):
         self.notify_subscribers(user)
 
     def reset_cache(self):
-        self.cache.delitem(self.title, 'tree', ignore_missing = True)
-        self.cache.delitem(self.title, 'mediacache', ignore_missing = True)
+        self.cache.delitem(self.title, 'tree')
+        self.cache.delitem(self.title, 'mediacache')
 
     def delete(self, user):
         self.reset_cache()
-        self.store.delitem(self.title, 'meta', ignore_missing = True)
-        self.store.delitem(self.title, 'txt', ignore_missing = True)
+        self.store.delitem(self.title, 'meta')
+        self.store.delitem(self.title, 'txt')
         self.log_change('deleted', user)
 
     def backlinks(self):

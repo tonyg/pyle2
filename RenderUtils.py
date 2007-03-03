@@ -4,7 +4,7 @@ import cgi
 import urllib
 
 class InternalLink(Core.Renderable):
-    def __init__(self, pagename, service = 'read', vistext = None):
+    def __init__(self, pagename, service = 'read', vistext = None, args = {}):
 	if not vistext:
 	    vistext = pagename
 
@@ -14,22 +14,26 @@ class InternalLink(Core.Renderable):
 	self.pagename = pagename
 	self.service = service
 	self.vistext = vistext
+        self.args = args
 
     def url(self):
-        return internal_link_url(self.pagename, self.service)
+        return internal_link_url(self.pagename, self.service, self.args)
 
     def templateName(self):
 	return 'pyle_internallink'
 
-def internal_link_url(pagename, service = 'read'):
+def internal_link_url(pagename, service = 'read', args = {}):
     if service and service != 'read':
         servicePart = '/' + service
     else:
         servicePart = ''
-    return web.ctx.home + '/' + pagename + servicePart
+    queryPart = urllib.urlencode(args)
+    if queryPart:
+        queryPart = '?' + queryPart
+    return web.ctx.home + '/' + pagename + servicePart + queryPart
 
-def internal_link(pagename, service = 'read', vistext = None, format = 'html'):
-    return InternalLink(pagename, service, vistext).render(format)
+def internal_link(pagename, service = 'read', vistext = None, format = 'html', args = {}):
+    return InternalLink(pagename, service, vistext, args).render(format)
 
 class MediaCacheEntry(InternalLink):
     def __init__(self, pagename, path, vistext, template):
