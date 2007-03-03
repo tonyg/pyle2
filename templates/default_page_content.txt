@@ -1,0 +1,2 @@
+The page "$title" does not currently exist.
+Please replace this default content.
