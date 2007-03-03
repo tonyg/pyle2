@@ -247,16 +247,25 @@ class Page(Section):
 	self.cache.setpickle(self.title, 'mediacache', self.mediacache)
 
     def save(self, user):
-        self.setmetadate('Date', time.time())
+        savetime = time.time()
+        self.setmetadate('Date', savetime)
         self.setmeta('Modifier', user.getusername())
         self.store.setpickle(self.title, 'meta', self.meta)
 	self.store.setitem(self.title, 'txt', self.text)
+        self.log_change('saved', user, savetime)
         self.notify_subscribers()
 
     def notify_subscribers(self):
         if self.notify_required:
             ### FIXME: implement me
             self.notify_required = False
+
+    def log_change(self, event, user, when = None):
+        if not when:
+            when = time.time()
+        oldchanges = self.cache.getpickle('changes', 'changelog', [])
+        oldchanges.append((event, user.username, when))
+        self.cache.setpickle('changes', 'changelog', oldchanges)
 
     def readable_for(self, user):
         return not user.is_anonymous() or Config.allow_anonymous_view
