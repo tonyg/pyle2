@@ -27,6 +27,7 @@ dot_command = '/usr/bin/env dot'
 # How should Pyle authenticate users?
 user_authenticator = \
         User.BugzillaAuthenticator(url = 'https://extra.lshift.net/bugzilla/relogin.cgi',
+                                   default_email_suffix = 'lshift.net',
                                    success_regex = '<h1>Logged Out</h1>')
 
 # How should Pyle store user properties?

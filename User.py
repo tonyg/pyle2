@@ -69,11 +69,13 @@ class BugzillaAuthenticator(Authenticator):
     def __init__(self,
                  url = None,
                  success_regex = None,
+                 default_email_suffix = None,
                  login_input = 'Bugzilla_login',
                  password_input = 'Bugzilla_password',
                  other_inputs = [('GoAheadAndLogIn', '1')]):
         self.url = url
         self.success_regex = re.compile(success_regex)
+        self.default_email_suffix = default_email_suffix
         self.login_input = login_input
         self.password_input = password_input
         self.other_inputs = other_inputs
@@ -91,6 +93,8 @@ class BugzillaAuthenticator(Authenticator):
             return False
 
     def lookup_user(self, username):
+        if username.find('@') == -1 and self.default_email_suffix:
+            username = username + '@' + self.default_email_suffix
         return BugzillaUser(username)
 
 ###########################################################################
