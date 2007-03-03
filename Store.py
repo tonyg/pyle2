@@ -1,6 +1,7 @@
 import pickle
 import os
 import glob
+import exceptions
 
 class Store:
     def probe_kind(self):
@@ -17,6 +18,9 @@ class Store:
 
     def setitem(self, title, kind, value, is_binary = False):
 	subClassResponsibility()
+
+    def delitem(self, title, kind):
+        subClassResponsibility
 
     def getpickle(self, title, kind, defaultvalue):
 	p = self.getitem(title, kind, None, True)
@@ -75,6 +79,15 @@ class FileStore(Store):
 	f = open(self.path_(title, kind), self.file_open_mode_('w', is_binary))
 	f.write(value)
 	f.close()
+
+    def delitem(self, title, kind, ignore_missing = False):
+        try:
+            os.unlink(self.path_(title, kind))
+        except exceptions.OSError:
+            if ignore_missing:
+                pass
+            else:
+                raise exceptions.KeyError((title, kind))
 
     def commit(self):
 	pass
