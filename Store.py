@@ -467,7 +467,7 @@ class Transaction(Store):
         if version is None:
             key = (title, kind)
             if key in self.changed:
-                return self.changed[key]
+                return self.changed[key][0]
             elif key in self.deleted:
                 return defaultvalue
             else:
