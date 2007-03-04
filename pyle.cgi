@@ -17,6 +17,7 @@ urls = (
     '/([^/]*)', 'read',
     '/([^/]*)/print', 'printmode',
     '/([^/]*)/history', 'history',
+    '/([^/]*)/diff', 'diff',
     '/([^/]*)/backlinks', 'backlinks',
     '/([^/]*)/subscribe', 'subscribe',
     '/([^/]*)/edit', 'edit',
@@ -174,6 +175,19 @@ class printmode(PageAction):
 class history(PageAction):
     def templateName(self):
         return 'action_history'
+
+class diff(Action):
+    def login_required(self):
+        return not Config.allow_anonymous_view
+
+    def handle_request(self, pagename):
+        self.v1 = self.ctx.store.gethistoryentry(pagename, 'txt', self.input.v1)
+        self.v2 = self.ctx.store.gethistoryentry(pagename, 'txt', self.input.v2)
+        self.diff = self.ctx.store.diff(pagename, 'txt', self.input.v1, self.input.v2)
+        Action.handle_request(self)
+
+    def templateName(self):
+        return 'action_diff'
 
 class backlinks(PageAction):
     def prerender(self, format):

@@ -50,6 +50,12 @@ def media_cache(renderer, cachepath, vistext, template, mimetype, bytes):
 
 escape = cgi.escape
 
+def escapeall(lines):
+    return map(escape, lines)
+
+def escapeallpre(lines):
+    return ''.join([escape(x).replace('\n', '&nbsp;\n') for x in lines])
+
 def aescape(s):
     s = escape(s)
     s = s.replace('"', '&quot;')

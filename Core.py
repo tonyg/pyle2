@@ -254,6 +254,12 @@ class Page(Section):
             entry.who = meta.get('Modifier', '') or Config.anonymous_user
         return entries
 
+    def friendly_version(self):
+        if self.version:
+            e = self.store.gethistoryentry(self.title, 'txt', self.version)
+            if e: return e.friendly_id
+        return self.version
+
     def exists(self):
         return self.store.has_key(self.title)
 

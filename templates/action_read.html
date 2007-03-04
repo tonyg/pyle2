@@ -9,7 +9,7 @@
 	#include $skinfile("common_page_headers.html")
 	<h1>$internal_link($page.title, 'backlinks', $page.title)</h1>
 	#if $page.version
-	<p>version $page.version</p>
+	<p>version $page.friendly_version</p>
 	#end if
 	#set $allbacklinks = $page.backlinks
 	#if $allbacklinks and not $ctx.printmode
