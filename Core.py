@@ -294,17 +294,16 @@ class Page(Section):
 
     def load_(self):
         self.meta = self.store.getpickle(self.title, 'meta', {}, self.version)
-        self.text = self.store.getitem(self.title, 'txt', None, self.version)
-        if self.text is None:
-            self.text = str(DefaultPageContent(self.title).render('txt'))
-        if self.version:
-            self.container_items = None
-            self.mediacache = {}
-        else:
-            self.container_items = self.cache.getpickle(self.title, 'tree', None)
-            self.mediacache = self.cache.getpickle(self.title, 'mediacache', {})
-        if self.container_items is None:
-	    self.renderTree()
+        self._text = None
+        self.container_items = None
+        self._mediacache = None
+
+    def text(self):
+        if self._text is None:
+            self._text = self.store.getitem(self.title, 'txt', None, self.version)
+            if self._text is None:
+                self._text = str(DefaultPageContent(self.title).render('txt'))
+        return self._text
 
     def newest_stored_version(self):
         return self.store.current_version_id(self.title, 'txt')
@@ -346,23 +345,33 @@ class Page(Section):
 
     def setText(self, newtext):
         newtext = self._preprocess(newtext)
-        self.notify_required = self.notify_required or (self.text != newtext)
-	self.text = newtext
-	self.renderTree()
+        self.notify_required = self.notify_required or (self._text != newtext)
+	self._text = newtext
+        self.reset_cache()
 
-    def renderTree(self):
-	self.container_items = []
-	self.mediacache = {}
+    def prerender(self, format):
+        if not self.version:
+            self.container_items = self.cache.getpickle(self.title, 'tree', None)
+            self._mediacache = self.cache.getpickle(self.title, 'mediacache', {})
+            if self.container_items is not None:
+                return
+
+        self.container_items = []
+        self._mediacache = {}
+
         web.ctx.active_page = self
-	doc = Block.parsestring(self.text)
+	doc = Block.parsestring(self.text())
 	PyleBlockParser(self).visit(doc.children)
         web.ctx.active_page = None
-	self.saveTree()
 
-    def saveTree(self):
         if not self.version:
             self.cache.setpickle(self.title, 'tree', self.container_items)
-            self.cache.setpickle(self.title, 'mediacache', self.mediacache)
+            self.cache.setpickle(self.title, 'mediacache', self._mediacache)
+
+    def mediacache(self):
+        if self._mediacache is None:
+            self.prerender('html')
+        return self._mediacache
 
     def save(self, user):
         savetime = time.time()
@@ -374,7 +383,7 @@ class Page(Section):
 
     def inner_save(self):
         self.store.setpickle(self.title, 'meta', self.meta)
-	self.store.setitem(self.title, 'txt', self.text)
+	self.store.setitem(self.title, 'txt', self._text)
 
     def reset_cache(self):
         self.cache.delitem(self.title, 'tree')
@@ -418,9 +427,10 @@ class Page(Section):
 
     def notify_subscribers(self, currentuser):
         if self.notify_required and Config.smtp_hostname:
-            notification = str(PageChangeEmail(self).render('email'))
-            send_emails([s for s in self.subscribers() if s != currentuser],
-                        notification)
+            users = [s for s in self.subscribers() if s != currentuser]
+            if users:
+                notification = str(PageChangeEmail(self).render('email'))
+                send_emails(users, notification)
             self.notify_required = False
 
     def log_change(self, event, user, when = None):

@@ -34,6 +34,10 @@ code_enscript_command = '/usr/bin/env enscript'
 # Where may "dot" be found, to render graph figures?
 dot_command = '/usr/bin/env dot'
 
+# What should be used as the canonical base URL for this instance of
+# Pyle? (Leave the trailing slash off)
+canonical_base_url = 'http://localhost:8080'
+
 # How should Pyle authenticate users?
 user_authenticator = \
         User.BugzillaAuthenticator(url = 'https://extra.lshift.net/bugzilla/relogin.cgi',

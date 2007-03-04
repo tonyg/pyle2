@@ -1,3 +1,5 @@
+#!/usr/bin/env python2.5
+# -*- python -*-
 import sys
 import posix
 import FtpServer
@@ -16,6 +18,8 @@ class PyleFtpFS(FtpServer.FlatFileSystem):
 		web.ctx.store = self.file_store
 		web.ctx.cache = self.cache
 		web.ctx.attachments = Store.Transaction(Config.attachment_store)
+		web.ctx.printmode = False
+		web.ctx.home = Config.canonical_base_url
 
 	def commit_transaction(self):
 		self.file_store.commit()
@@ -53,14 +57,15 @@ class PyleFtpFS(FtpServer.FlatFileSystem):
 		page = self._retrieve_page(filename)
 		if not page.readable_for(self.user):
 			raise FtpResponse(550, 'Read permission denied')
-		return page.text
+		return page.text()
 
 	def lengthOf(self, filename):
 		page = self._retrieve_page(filename)
-		return len(page.text)
+		return len(page.text())
 
 	def userFor(self, filename):
-		return 'nocreator'
+		page = self._retrieve_page(filename)
+		return page.getmeta('Modifier', '') or Config.anonymous_user
 
 	def mtimeFor(self, filename):
 		page = self._retrieve_page(filename)

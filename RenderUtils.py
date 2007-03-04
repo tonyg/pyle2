@@ -45,7 +45,7 @@ class MediaCacheEntry(InternalLink):
 	return self.template
 
 def media_cache(renderer, cachepath, vistext, template, mimetype, bytes):
-    renderer.page.mediacache[cachepath] = (mimetype, bytes)
+    renderer.page.mediacache()[cachepath] = (mimetype, bytes)
     return MediaCacheEntry(renderer.page.title, cachepath, vistext, template)
 
 escape = cgi.escape

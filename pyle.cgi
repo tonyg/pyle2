@@ -205,7 +205,7 @@ class backlinks(PageAction):
 class mediacache(PageAction):
     def handle_request(self, pagename, cachepath):
         self.init_page(pagename)
-        (mimetype, bytes) = self.page.mediacache[cachepath]
+        (mimetype, bytes) = self.page.mediacache()[cachepath]
         web.header('Content-Type', mimetype)
         web.output(bytes)
 

@@ -12,11 +12,11 @@ def SublanguageHandler(args, doc, renderer):
     pngdata = child_stdout.read()
     child_stdout.close()
 
-    if not renderer.page.mediacache.has_key('__dot_counter'):
-	renderer.page.mediacache['__dot_counter'] = 0
-    index = renderer.page.mediacache['__dot_counter']
+    if not renderer.page.mediacache().has_key('__dot_counter'):
+	renderer.page.mediacache()['__dot_counter'] = 0
+    index = renderer.page.mediacache()['__dot_counter']
     name = 'dot' + str(index)
-    renderer.page.mediacache['__dot_counter'] = index + 1
+    renderer.page.mediacache()['__dot_counter'] = index + 1
 
     cachepath = 'dot/' + name + '.png'
     renderer.add(RenderUtils.media_cache(renderer,
