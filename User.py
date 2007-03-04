@@ -116,15 +116,7 @@ class BugzillaAuthenticator(Authenticator):
 
 anonymous = Anonymous()
 
-user_db_initialised = 0
-def init_user_db():
-    global user_db_initialised
-    if not user_db_initialised:
-        Config.user_data_store.set_basic_kind('user')
-        user_db_initialised = 1
-
 def lookup(username):
-    init_user_db()
     if username is None:
         return anonymous
     else:

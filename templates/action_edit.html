@@ -21,6 +21,7 @@
       #if $page.exists
       <p>
 	$internal_link($page.title, vistext = 'Cancel changes made, and view this page as currently saved')
+	<br />$internal_link($page.title, 'attach', vistext = 'Edit attachments for this page')
       </p>
       <p>
 	$internal_link($page.title, service = 'delete', vistext = 'Delete this page')

@@ -14,6 +14,8 @@ class PyleFtpFS(FtpServer.FlatFileSystem):
 		self.cache = Store.Transaction(Config.cache_store)
 		web.load()
 		web.ctx.store = self.file_store
+		web.ctx.cache = self.cache
+		web.ctx.attachments = Store.Transaction(Config.attachment_store)
 
 	def commit_transaction(self):
 		self.file_store.commit()
@@ -45,7 +47,7 @@ class PyleFtpFS(FtpServer.FlatFileSystem):
 	def _retrieve_page(self, filename):
 		if not self.file_store.has_key(filename):
 			raise FtpResponse(550, 'File not found')
-		return Core.Page(self.file_store, self.cache, filename)
+		return Core.Page(filename)
 
 	def contentsFor(self, filename):
 		page = self._retrieve_page(filename)
@@ -87,6 +89,7 @@ class PyleFtpFS(FtpServer.FlatFileSystem):
 		self.log_action('dele', [filename])
 
 if __name__ == '__main__':
+	Core.init_pyle()
 	svr = FtpServer.FtpServer(('', 8021), PyleFtpFS,
 				  bannerText = 'Pyle FTP service ready.')
 

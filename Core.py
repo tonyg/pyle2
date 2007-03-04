@@ -221,11 +221,73 @@ def normalize_newlines(s):
     s = s.replace('\r', '\n')
     return s
 
+def log_change(d, when = None):
+    if not when:
+        when = time.time()
+    oldchanges = web.ctx.cache.getpickle('changes', 'changelog', [])
+    d['when'] = when
+    oldchanges.append(d)
+    web.ctx.cache.setpickle('changes', 'changelog', oldchanges)
+
+class Attachment:
+    def __init__(self, pagetitle, name, version):
+        self.pagetitle = pagetitle
+        self.name = name
+        self.version = version
+        self._load()
+
+    def _key(self, kind):
+        return self.pagetitle + '.attach' + kind + '.' + self.name
+
+    def _load(self):
+        props = web.ctx.attachments.getpickle(self._key('meta'), None, {}, self.version)
+        self.mimetype = props.get('mimetype', 'application/octet-stream')
+        self.creator = props.get('creator', '')
+        self.bodylen = props.get('bodylen', None)
+        self._body = None
+
+    def exists(self):
+        return web.ctx.attachments.has_key(self._key('meta'))
+
+    def save(self):
+        props = {
+            'mimetype': self.mimetype,
+            'creator': self.creator,
+            'bodylen': self.bodylen,
+            }
+        web.ctx.attachments.setpickle(self._key('meta'), None, props)
+        web.ctx.attachments.setitem(self._key('file'), None, self.body(), is_binary = True)
+
+    def delete(self):
+        web.ctx.attachments.delitem(self._key('meta'), None)
+        web.ctx.attachments.delitem(self._key('file'), None)
+
+    def history(self):
+        entries = web.ctx.attachments.gethistory(self._key('file'), None)
+        for entry in entries:
+            meta = web.ctx.attachments.getpickle(self._key('meta'), None, {}, entry.version_id)
+            entry.who = meta.get('creator', '') or Config.anonymous_user
+        return entries
+
+    def body(self):
+        if not self._body:
+            self._body = web.ctx.attachments.getitem(self._key('file'), None, '', self.version,
+                                                     is_binary = True)
+            self.bodylen = len(self._body)
+        return self._body
+
+    def setbody(self, newbody):
+        self._body = newbody
+        self.bodylen = len(self._body)
+
+    def url(self):
+        return web.ctx.home + '/' + self.pagetitle + '/attach/' + self.name
+
 class Page(Section):
-    def __init__(self, store, cache, title, version = None):
+    def __init__(self, title, version = None):
         Section.__init__(self, 0, title)
-	self.store = store
-	self.cache = cache
+	self.store = web.ctx.store
+	self.cache = web.ctx.cache
         self.version = version
         self.notify_required = False
 	self.load_()
@@ -291,8 +353,10 @@ class Page(Section):
     def renderTree(self):
 	self.container_items = []
 	self.mediacache = {}
+        web.ctx.active_page = self
 	doc = Block.parsestring(self.text)
 	PyleBlockParser(self).visit(doc.children)
+        web.ctx.active_page = None
 	self.saveTree()
 
     def saveTree(self):
@@ -304,10 +368,13 @@ class Page(Section):
         savetime = time.time()
         self.setmetadate('Date', savetime)
         self.setmeta('Modifier', user.getusername())
-        self.store.setpickle(self.title, 'meta', self.meta)
-	self.store.setitem(self.title, 'txt', self.text)
+        self.inner_save()
         self.log_change('saved', user, savetime)
         self.notify_subscribers(user)
+
+    def inner_save(self):
+        self.store.setpickle(self.title, 'meta', self.meta)
+	self.store.setitem(self.title, 'txt', self.text)
 
     def reset_cache(self):
         self.cache.delitem(self.title, 'tree')
@@ -317,7 +384,20 @@ class Page(Section):
         self.reset_cache()
         self.store.delitem(self.title, 'meta')
         self.store.delitem(self.title, 'txt')
+        for name in self.attachment_names():
+            Attachment(self.title, name, None).delete()
         self.log_change('deleted', user)
+
+    def attachment_names(self):
+        prefix = self.title + '.attachmeta.'
+        prefixlen = len(prefix)
+        return [f[prefixlen:] for f in web.ctx.attachments.keys_glob(prefix + '*')]
+
+    def get_attachments(self):
+        return [Attachment(self.title, name, None) for name in self.attachment_names()]
+
+    def get_attachment(self, name, version):
+        return Attachment(self.title, name, version)
 
     def backlinks(self):
         result = []
@@ -344,14 +424,9 @@ class Page(Section):
             self.notify_required = False
 
     def log_change(self, event, user, when = None):
-        if not when:
-            when = time.time()
-        oldchanges = self.cache.getpickle('changes', 'changelog', [])
-        oldchanges.append({'page': self.title,
-                           'what': event,
-                           'who': user.username,
-                           'when': when})
-        self.cache.setpickle('changes', 'changelog', oldchanges)
+        log_change({'page': self.title,
+                    'what': event,
+                    'who': user.username}, when)
 
     def readable_for(self, user):
         return not user.is_anonymous() or Config.allow_anonymous_view
@@ -361,3 +436,11 @@ class Page(Section):
 
     def templateName(self):
 	return 'pyle_page'
+
+app_initialised = 0
+def init_pyle():
+    global app_initialised
+    if not app_initialised:
+        Config.user_data_store.set_basic_kind('user')
+        Config.attachment_store.set_basic_kind(None)
+        app_initialised = 1

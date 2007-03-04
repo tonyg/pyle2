@@ -20,6 +20,11 @@ linkpattern = r'\b([A-Z]+[a-z0-9]+){2,}'
 file_store = Store.FileStore('./pyledb')
 #file_store = Store.CvsStore('./cvstest/data')
 #file_store = Store.SvnStore('./cvstest/trunk')
+
+# Location for attachments, or None to disable attachments
+attachment_store = Store.FileStore('./pyledb/attachments')
+
+# Temporary cached data store.
 cache_store = Store.FileStore('./pyledb_cache')
 
 # Use "enscript" to format @code blocks? Set to None to disable.
@@ -71,3 +76,20 @@ daemon_email_address = 'pyle2-daemon@lshift.net'
 
 # For the bug spanhandler - template for linking to bugs.
 bug_url_template = 'https://extra.lshift.net/bugzilla/show_bug.cgi?id=%s'
+
+# Mime types recognised for attachment uploads - feel free to change these
+mimetypes = [
+    'application/octet-stream',
+    'text/html',
+    'text/plain',
+    'image/gif',
+    'image/jpeg',
+    'image/png',
+    'application/rtf',
+    'application/pdf',
+    'application/msword',
+    'application/vnd.ms-project',
+    'application/x-gzip',
+    'application/x-gzipped-tar',
+    'application/x-zip-compressed',
+]

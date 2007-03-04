@@ -2,6 +2,7 @@ import re
 import pickle
 import os
 import glob
+import fnmatch
 import exceptions
 import sets
 import time
@@ -20,7 +21,10 @@ class Store:
         self.basic_kind = basic_kind
 
     def keys(self):
-        subClassResponsibility
+        subClassResponsibility()
+
+    def keys_glob(self, titleglob):
+        subClassResponsibility()
 
     def has_key(self, title):
 	subClassResponsibility()
@@ -38,7 +42,7 @@ class Store:
 	subClassResponsibility()
 
     def delitem(self, title, kind):
-        subClassResponsibility
+        subClassResponsibility()
 
     def set_basic_kind(self, new_basic_kind):
         self.basic_kind = new_basic_kind
@@ -137,10 +141,19 @@ class FileStore(Store):
 	return os.path.join(self.dirname, self.file_(title, kind))
 
     def keys(self):
-        globpattern = self.path_('*', self.basic_kind)
-        suffixlen = len(self.basic_kind) + 1
-        prefixlen = len(globpattern) - suffixlen - 1
-        return [filename[prefixlen:-suffixlen] for filename in glob.iglob(globpattern)]
+        return self.keys_glob('*')
+
+    def keys_glob(self, titleglob):
+        globpattern = self.path_(titleglob, self.basic_kind)
+        if self.basic_kind:
+            suffixlen = len(self.basic_kind) + 1
+        else:
+            suffixlen = 0
+        prefixlen = len(globpattern) - suffixlen - len(titleglob)
+        if suffixlen:
+            return [filename[prefixlen:-suffixlen] for filename in glob.iglob(globpattern)]
+        else:
+            return [filename[prefixlen:] for filename in glob.iglob(globpattern)]
 
     def has_key(self, title):
 	return os.path.exists(self.path_(title, self.basic_kind))
@@ -152,7 +165,7 @@ class FileStore(Store):
             return base
 
     def gethistory(self, title, kind):
-        return [HistoryEntry("N/A", "N/A", os.stat(self.path_(title, kind)).st_mtime)]
+        return [HistoryEntry("current", "current", os.stat(self.path_(title, kind)).st_mtime)]
 
     def current_version_id(self, title, kind):
         return None
@@ -432,6 +445,12 @@ class Transaction(Store):
     def keys(self):
         result = self.backing.keys()
         result.extend([k[0] for k in self.changed.keys() if k[1] == self.basic_kind])
+        return result
+
+    def keys_glob(self, titleglob):
+        result = self.backing.keys_glob(titleglob)
+        result.extend([k[0] for k in self.changed.keys()
+                       if k[1] == self.basic_kind and fnmatch.fnmatch(k[0], titleglob)])
         return result
 
     def has_key(self, title):

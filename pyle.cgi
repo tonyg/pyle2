@@ -24,6 +24,10 @@ urls = (
     '/([^/]*)/save', 'save',
     '/([^/]*)/delete', 'delete',
     '/([^/]*)/mediacache/(.*)', 'mediacache',
+    '/([^/]*)/attach/(.*)', 'getattach',
+    '/([^/]*)/attach', 'editattach',
+    '/([^/]*)/updateattach', 'updateattach',
+    '/([^/]*)/delattach', 'delattach',
     '/_/static/([^/]+)', 'static',
     '/_/settings', 'settings',
     '/_/follow_backlink', 'follow_backlink',
@@ -55,6 +59,7 @@ class Action(Core.Renderable):
         self.ctx = web.ctx
         self.ctx.store = Store.Transaction(Config.file_store)
         self.ctx.cache = Store.Transaction(Config.cache_store)
+        self.ctx.attachments = Store.Transaction(Config.attachment_store)
         self.ctx.printmode = False
 
     def defaultInputs(self):
@@ -118,6 +123,7 @@ class Action(Core.Renderable):
         self.saveSession_()
         self.ctx.store.commit()
         self.ctx.cache.commit()
+        self.ctx.attachments.commit()
 
     def render(self, format):
         self.commit()
@@ -152,7 +158,7 @@ class PageAction(Action):
                 version = self.input.version
             else:
                 version = None
-            self.page = Core.Page(self.ctx.store, self.ctx.cache, pagename, version)
+            self.page = Core.Page(pagename, version)
 
     def login_required(self):
         return not Config.allow_anonymous_view
@@ -249,6 +255,63 @@ class delete(PageAction):
     def templateName(self):
         return 'action_delete'
 
+class getattach(PageAction):
+    def login_required(self):
+        return not Config.allow_anonymous_view
+
+    def handle_request(self, pagename, attachname):
+        self.init_page(pagename)
+        a = self.page.get_attachment(attachname, self.input.get('version', None))
+        web.header('Content-Type', a.mimetype)
+        web.header('Content-Length', len(a.body()))
+        web.output(a.body())
+
+class editattach(PageAction):
+    def login_required(self):
+        return not Config.allow_anonymous_edit
+
+    def templateName(self):
+        return 'action_editattach'
+
+class updateattach(PageAction):
+    def login_required(self):
+        return not Config.allow_anonymous_edit
+
+    def handle_request(self, pagename):
+        self.init_page(pagename)
+
+        attachname = self.input.name
+        content = self.input.content
+        if content and not attachname:
+            attachname = os.path.basename(web.input(content = {}).content.filename)
+
+        a = self.page.get_attachment(attachname, None)
+        a.mimetype = self.input.mimetype
+        a.creator = self.user().getusername()
+        if content:
+            a.setbody(content)
+        a.save()
+        self.page.reset_cache()
+        web.seeother(RenderUtils.internal_link_url(pagename, 'attach'))
+
+class delattach(PageAction):
+    def login_required(self):
+        return not Config.allow_anonymous_edit
+
+    def handle_request(self, pagename):
+        self.attachname = self.input.name
+        if self.input.get('delete_confirmed', ''):
+            self.init_page(pagename)
+            a = self.page.get_attachment(self.attachname, None)
+            a.delete()
+            self.page.reset_cache()
+            web.seeother(RenderUtils.internal_link_url(pagename, 'attach'))
+        else:
+            PageAction.handle_request(self, pagename)
+
+    def templateName(self):
+        return 'action_delattach'
+
 class static:
     def GET(self, filename):
         if filename in ['.', '..', '']:
@@ -305,4 +368,6 @@ class search(Action):
     def templateName(self):
         return 'action_search'
 
-if __name__ == '__main__': web.run(urls, globals())
+if __name__ == '__main__':
+    Core.init_pyle()
+    web.run(urls, globals())
