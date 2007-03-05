@@ -38,6 +38,9 @@ dot_command = '/usr/bin/env dot'
 # Pyle? (Leave the trailing slash off)
 canonical_base_url = 'http://localhost:8080'
 
+# Use the canonical_base_url in regular HTTP requests?
+use_canonical_base_url = True
+
 # How should Pyle authenticate users?
 user_authenticator = \
         User.BugzillaAuthenticator(url = 'https://extra.lshift.net/bugzilla/relogin.cgi',

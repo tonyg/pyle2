@@ -61,6 +61,8 @@ class Action(Core.Renderable):
         self.ctx.cache = Store.Transaction(Config.cache_store)
         self.ctx.attachments = Store.Transaction(Config.attachment_store)
         self.ctx.printmode = False
+        if Config.use_canonical_base_url:
+            self.ctx.home = Config.canonical_base_url
 
     def defaultInputs(self):
         return {
