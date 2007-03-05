@@ -109,6 +109,7 @@ class Action(Core.Renderable):
                 return True
             login_failed = 1
 
+        web.header('Content-Type','text/html; charset=utf-8', unique=True)
         web.output(LoginPage(self, login_failed).render('html'))
         return False
 
