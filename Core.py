@@ -209,7 +209,7 @@ class PageChangeEmail(Renderable):
         return 'page_change'
 
 def send_emails(users, message_including_headers):
-    if users:
+    if users and Config.smtp_hostname:
         import smtplib
         s = smtplib.SMTP(Config.smtp_hostname, Config.smtp_portnumber)
         s.sendmail(Config.daemon_email_address, [u.email for u in users],
@@ -426,7 +426,7 @@ class Page(Section):
         return result
 
     def notify_subscribers(self, currentuser):
-        if self.notify_required and Config.smtp_hostname:
+        if self.notify_required:
             users = [s for s in self.subscribers() if s != currentuser]
             if users:
                 notification = str(PageChangeEmail(self).render('email'))
