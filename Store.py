@@ -7,6 +7,7 @@ import exceptions
 import sets
 import time
 import Diff
+import StringIO
 
 import warnings
 import exceptions
@@ -17,76 +18,63 @@ warnings.filterwarnings('ignore',
                         98)
 
 class Store:
-    def __init__(self, basic_kind):
-        self.basic_kind = basic_kind
+    def __init__(self):
+        pass
 
     def keys(self):
         subClassResponsibility()
 
-    def keys_glob(self, titleglob):
+    def keys_glob(self, keyglob):
         subClassResponsibility()
 
-    def has_key(self, title):
+    def has_key(self, key):
 	subClassResponsibility()
 
-    def gethistory(self, title, kind):
+    def gethistory(self, key):
         subClassResponsibility()
 
-    def current_version_id(self, title, kind):
-        subClassResponsibility()
-
-    def getitem(self, title, kind, defaultvalue, version = None, is_binary = False):
+    def getreadstream(self, key, version):
 	subClassResponsibility()
 
-    def setitem(self, title, kind, value, is_binary = False):
+    def getwritestream(self, key):
 	subClassResponsibility()
 
-    def delitem(self, title, kind):
+    def delete(self, key):
         subClassResponsibility()
 
-    def set_basic_kind(self, new_basic_kind):
-        self.basic_kind = new_basic_kind
+    def message_encoder(self):
+        subClassResponsibility()
 
-    def getpickle(self, title, kind, defaultvalue, version = None):
-	p = self.getitem(title, kind, None, version, True)
-	if p:
-	    return pickle.loads(p)
+    def getbinary(self, key, defaultvalue, version = None):
+        f = self.getreadstream(key, version)
+        if f:
+            result = f.read()
+            f.close()
+            return f
+        else:
+            return defaultvalue
+
+    def setbinary(self, key, value):
+        f = self.getwritestream(key)
+        f.write(value)
+        f.close()
+
+    def getpickle(self, key, defaultvalue, version = None):
+	f = self.getreadstream(key, version)
+	if f:
+	    result = pickle.load(f)
+            f.close()
+            return result
 	else:
 	    return defaultvalue
 
-    def setpickle(self, title, kind, value):
-	self.setitem(title, kind, pickle.dumps(value), True)
+    def setpickle(self, key, value):
+        f = self.getwritestream(key)
+        pickle.dump(value, f)
+        f.close()
 
-    def page(self, title, createIfAbsent = False):
-	if has_key(self, title) or createIfAbsent:
-	    return Page(self, title)
-	else:
-	    raise KeyError(title)
-
-    def __get__(self, title):
-	return self.page(title)
-
-    def items_for_search(self):
-        for key in self.keys():
-            yield (key, self.getitem(key, self.basic_kind, ''))
-
-    def search(self, keywords):
-        regexes = [re.compile(re.escape(k), re.IGNORECASE) for k in keywords]
-        return self.search_regexes(regexes)
-
-    def search_regexes(self, regexes):
-        result = []
-        for key, text in self.items_for_search():
-            score = 0
-            for r in regexes:
-                score = score + len(r.findall(text)) + len(r.findall(key))
-            if score:
-                result.append((score, key))
-        result.sort(None, lambda r: r[0], True)
-        return result
-
-    def gethistoryentry(self, title, kind, version):
-        entries = self.gethistory(title, kind)
+    def gethistoryentry(self, key, version):
+        entries = self.gethistory(key)
         for entry in entries:
             if entry.version_id == version:
                 return entry
@@ -95,9 +83,9 @@ class Store:
                 return entry
         return HistoryEntry(version, version, 0)
 
-    def diff(self, title, kind, v1, v2):
-        text1 = self.getitem(title, kind, '', v1)
-        text2 = self.getitem(title, kind, '', v2)
+    def diff(self, key, v1, v2):
+        text1 = self.getbinary(key, '', v1)
+        text2 = self.getbinary(key, '', v2)
         f1 = tempfilewith(text1)
         f2 = tempfilewith(text2)
         command = 'diff -u3 %s %s' % (f1, f2)
@@ -106,7 +94,13 @@ class Store:
         f.close()
         os.unlink(f1)
         os.unlink(f2)
-        return Diff.Diff(title, v1, v2, result)
+        return Diff.Diff(key, v1, v2, result)
+
+    def process_transaction(self, changed, deleted):
+        for key, value in changed.items():
+            self.setbinary(key, value)
+        for key in deleted:
+            self.delete(key)
 
 def tempfilewith(text):
     name = os.tmpnam()
@@ -114,6 +108,120 @@ def tempfilewith(text):
     f.write(text)
     f.close()
     return name
+
+def readheaders(f):
+    result = {}
+    while True:
+        line = f.readline().rstrip('\n')
+        if line == '':
+            return result
+        (key, value) = line.split(': ', 1)
+        result[key] = value
+
+def writeheaders(h, f):
+    for (key, value) in h.iteritems():
+        f.write(key)
+        f.write(': ')
+        f.write(value)
+        f.write('\n')
+
+class CompoundMessageEncoder:
+    def __init__(self, store):
+        self.store = store
+
+    def has_key(self, key):
+        return self.store.has_key(key)
+
+    def keys_glob(self, keyglob):
+        return self.store.keys_glob(keyglob)
+
+    def getheaders(self, key, version):
+        f = self.store.getreadstream(key, version)
+        if f:
+            result = readheaders(f)
+            f.close()
+            return result
+        else:
+            return {}
+
+    def getmessage(self, key, version):
+        f = self.store.getreadstream(key, version)
+        if f:
+            header = readheaders(f)
+            body = f.read()
+            f.close()
+            return (header, body)
+        else:
+            return ({}, '')
+
+    def getbody(self, key, version):
+        (header, body) = self.getmessage(key, version)
+        return body
+
+    def setmessage(self, key, headers, body):
+        f = self.store.getwritestream(key)
+        writeheaders(headers, f)
+        f.write('\n')
+        f.write(body)
+        f.close()
+
+    def delete(self, key):
+        self.store.delete(key)
+
+    def gethistory(self, key):
+        return self.store.gethistory(key)
+
+    def gethistoryentry(self, key, version):
+        return self.store.gethistoryentry(key, version)
+
+class SplitMessageEncoder:
+    def __init__(self, store):
+        self.store = store
+
+    def has_key(self, key):
+        return self.store.has_key('data.' + key)
+
+    def keys_glob(self, keyglob):
+        return [k[5:] for k in self.store.keys_glob('data.' + keyglob)]
+
+    def getheaders(self, key, version):
+        f = self.store.getreadstream('meta.' + key, version)
+        if f:
+            result = readheaders(f)
+            f.close()
+            return result
+        else:
+            return {}
+
+    def getmessage(self, key, version):
+        return (self.getheaders(key, version), self.getbody(key, version))
+
+    def getbody(self, key, version):
+        f = self.store.getreadstream('data.' + key, version)
+        if f:
+            body = f.read()
+            f.close()
+            return body
+        else:
+            return ''
+
+    def setmessage(self, key, headers, body):
+        f = self.store.getwritestream('meta.' + key)
+        writeheaders(headers, f)
+        f.close()
+        f = self.store.getwritestream('data.' + key)
+        f.write(body)
+        f.close()
+
+    def delete(self, key):
+        self.store.delete('meta.' + key)
+        self.store.delete('data.' + key)
+
+    def gethistory(self, key):
+        return self.store.gethistory('data.' + key)
+
+    def gethistoryentry(self, key, version):
+        return self.store.gethistoryentry('data.' + key, version)
 
 class HistoryEntry:
     def __init__(self, version_id, friendly_id, timestamp):
@@ -125,76 +233,45 @@ class HistoryEntry:
 
 class FileStore(Store):
     def __init__(self, dirname):
-        Store.__init__(self, 'txt')
+        Store.__init__(self)
 	self.dirname = dirname
+        self._encoder = SplitMessageEncoder(self)
 
-    def shell_quoted_file_(self, title, kind):
-        return '"' + self.file_(title, kind).replace('\\', '\\\\').replace('"', '\\"') + '"'
-
-    def file_(self, title, kind):
-        if kind is None:
-            return title
-        else:
-            return title + '.' + kind
-
-    def path_(self, title, kind):
-	return os.path.join(self.dirname, self.file_(title, kind))
+    def path_(self, key):
+	return os.path.join(self.dirname, key)
 
     def keys(self):
         return self.keys_glob('*')
 
-    def keys_glob(self, titleglob):
-        globpattern = self.path_(titleglob, self.basic_kind)
-        if self.basic_kind:
-            suffixlen = len(self.basic_kind) + 1
-        else:
-            suffixlen = 0
-        prefixlen = len(globpattern) - suffixlen - len(titleglob)
-        if suffixlen:
-            return [filename[prefixlen:-suffixlen] for filename in glob.iglob(globpattern)]
-        else:
-            return [filename[prefixlen:] for filename in glob.iglob(globpattern)]
+    def keys_glob(self, keyglob):
+        globpattern = self.path_(keyglob)
+        prefixlen = len(globpattern) - len(keyglob)
+        return [filename[prefixlen:] for filename in glob.iglob(globpattern)]
 
-    def has_key(self, title):
-	return os.path.exists(self.path_(title, self.basic_kind))
+    def has_key(self, key):
+	return os.path.exists(self.path_(key))
 
-    def file_open_mode_(self, base, is_binary):
-        if is_binary:
-            return base + 'b'
-        else:
-            return base
+    def gethistory(self, key):
+        return [HistoryEntry("current", "current", os.stat(self.path_(key)).st_mtime)]
 
-    def gethistory(self, title, kind):
-        return [HistoryEntry("current", "current", os.stat(self.path_(title, kind)).st_mtime)]
-
-    def current_version_id(self, title, kind):
-        return None
-
-    def getitem(self, title, kind, defaultvalue, version = None, is_binary = False):
+    def getreadstream(self, key, version):
 	try:
-	    f = open(self.path_(title, kind), self.file_open_mode_('r', is_binary))
-	    content = f.read()
-	    f.close()
-	    return content
+	    f = open(self.path_(key), 'rb')
+	    return f
 	except IOError:
-	    return defaultvalue
+	    return None
 
-    def setitem(self, title, kind, value, is_binary = False):
-	f = open(self.path_(title, kind), self.file_open_mode_('w', is_binary))
-	f.write(value)
-	f.close()
+    def getwritestream(self, key):
+	return open(self.path_(key), 'wb')
 
-    def delitem(self, title, kind):
+    def delete(self, key):
         try:
-            os.unlink(self.path_(title, kind))
+            os.unlink(self.path_(key))
         except exceptions.OSError:
             pass
 
-    def process_transaction(self, changed, deleted):
-        for (title, kind), (value, is_binary) in changed.items():
-            self.setitem(title, kind, value, is_binary)
-        for (title, kind) in deleted:
-            self.delitem(title, kind)
+    def message_encoder(self):
+        return self._encoder
 
 def parse_cvs_timestamp(s):
     m = re.match('(\d+)[/-](\d+)[/-](\d+) +(\d+):(\d+):(\d+)( +([^ ]+))?', s)
@@ -208,15 +285,24 @@ def parse_cvs_timestamp(s):
         timestamp = 0
     return timestamp
 
+def shell_quote(key):
+    return '"' + key.replace('\\', '\\\\').replace('"', '\\"') + '"'
+
+def quote_keys(what):
+    result = []
+    for key in what:
+        f = shell_quote(key)
+        result.append(f)
+    return ' '.join(result)
+
 class SimpleShellStoreBase(FileStore):
     def __init__(self, dirname):
         FileStore.__init__(self, dirname)
         self.history_cache = {}
 
-    def ensure_history_for(self, title, kind):
-        key = (title, kind)
+    def ensure_history_for(self, key):
         if not self.history_cache.has_key(key):
-            self.history_cache[key] = self.compute_history_for(title, kind)
+            self.history_cache[key] = self.compute_history_for(key)
         return self.history_cache[key]
 
     def pipe(self, text):
@@ -244,20 +330,24 @@ class SimpleShellStoreBase(FileStore):
         f.close()
         return result
 
-    def setitem(self, title, kind, value, is_binary = False):
-        self.history_cache.pop((title, kind), None)
-        FileStore.setitem(self, title, kind, value, is_binary)
+    def getwritestream(self, key):
+        self.history_cache.pop(key, None)
+        return FileStore.getwritestream(self, key)
 
-    def delitem(self, title, kind):
-        self.history_cache.pop((title, kind), None)
-        FileStore.delitem(self, title, kind)
+    def delete(self, key):
+        self.history_cache.pop(key, None)
+        FileStore.delete(self, key)
 
 class CvsStore(SimpleShellStoreBase):
+    def __init__(self, dirname):
+        SimpleShellStoreBase.__init__(self, dirname)
+        self._encoder = CompoundMessageEncoder(self)
+
     def shell_command(self, text):
         return 'cd ' + self.dirname + ' && cvs ' + text + ' 2>/dev/null'
 
-    def compute_history_for(self, title, kind):
-        lines = self.pipe_lines('log ' + self.file_(title, kind))
+    def compute_history_for(self, key):
+        lines = self.pipe_lines('log ' + shell_quote(key))
         entries = []
         versionmap = {}
         i = 0
@@ -285,62 +375,44 @@ class CvsStore(SimpleShellStoreBase):
             i = i + 1
         return (versionmap, entries)
 
-    def gethistory(self, title, kind):
-        (versionmap, entries) = self.ensure_history_for(title, kind)
+    def gethistory(self, key):
+        (versionmap, entries) = self.ensure_history_for(key)
         return entries
 
-    def current_version_id(self, title, kind):
-        revision = None
-        commitid = None
-        for line in self.pipe_lines('status ' + self.shell_quoted_file_(title, kind)):
-            m = re.search(r'Working revision:\s+([0-9.]+)', line)
-            if m: revision = m.group(1)
-            m = re.search(r'Commit Identifier:\s+(\S+)', line)
-            if m: commitid = m.group(1)
-        if commitid: return commitid
-        if revision: return revision
-        return None
-
-    def getitem(self, title, kind, defaultvalue, version = None, is_binary = False):
+    def getreadstream(self, key, version):
         if version:
-            (versionmap, entries) = self.ensure_history_for(title, kind)
+            (versionmap, entries) = self.ensure_history_for(key)
             if versionmap.has_key(version):
                 revision = versionmap[version]
-                return self.pipe_all('update -r ' + revision + ' -p ' + self.file_(title, kind))
+                return self.pipe('update -r ' + revision + ' -p ' + shell_quote(key)) or None
             else:
-                return defaultvalue
+                return None
         else:
-            return FileStore.getitem(self, title, kind, defaultvalue, version, is_binary)
+            return FileStore.getreadstream(self, key, version)
 
-    def diff(self, title, kind, v1, v2):
-        (versionmap, entries) = self.ensure_history_for(title, kind)
+    def diff(self, key, v1, v2):
+        (versionmap, entries) = self.ensure_history_for(key)
         r1 = versionmap.get(v1, v1)
         r2 = versionmap.get(v2, v2)
-        return Diff.Diff(title, v1, v2,
+        return Diff.Diff(key, v1, v2,
                          self.pipe_lines('diff -u3 -r %s -r %s %s' % \
-                                         (r1, r2, self.shell_quoted_file_(title, kind)),
+                                         (r1, r2, shell_quote(key)),
                                          True))
 
     def process_transaction(self, changed, deleted):
         FileStore.process_transaction(self, changed, deleted)
-        cmd = '( cd ' + self.dirname + ' && ('
-        touched = []
+        cmd = '( cd ' + shell_quote(self.dirname) + ' && ('
+        touched = ''
         if deleted:
-            cmd = cmd + ' cvs remove'
-            for (title, kind) in deleted:
-                f = self.shell_quoted_file_(title, kind)
-                touched.append(f)
-                cmd = cmd + ' ' + f
-            cmd = cmd + ' ;'
+            keys = quote_keys(deleted)
+            cmd = cmd + ' cvs remove ' + keys + ' ;'
+            touched = touched + ' ' + keys
         if changed:
-            cmd = cmd + ' cvs add -kb'
-            for (title, kind), (value, is_binary) in changed.items():
-                f = self.shell_quoted_file_(title, kind)
-                touched.append(f)
-                cmd = cmd + ' ' + f
-            cmd = cmd + ' ;'
+            keys = quote_keys(changed)
+            cmd = cmd + ' cvs add -kb ' + keys + ' ;'
+            touched = touched + ' ' + keys
         if touched:
-            cmd = cmd + ' cvs commit -m "CvsStore" ' + ' '.join(touched)
+            cmd = cmd + ' cvs commit -m "CvsStore"' + touched
             cmd = cmd + ' )) >/dev/null 2>&1'
             os.system(cmd)
 
@@ -363,11 +435,11 @@ class SvnStore(SimpleShellStoreBase):
                 result[parts[0]] = parts[1]
         return result
 
-    def gethistory(self, title, kind):
-        return self.ensure_history_for(title, kind)
+    def gethistory(self, key):
+        return self.ensure_history_for(key)
 
-    def compute_history_for(self, title, kind):
-        lines = self.pipe_lines('log ' + self.file_(title, kind))
+    def compute_history_for(self, key):
+        lines = self.pipe_lines('log ' + shell_quote(key))
         entries = []
         i = 0
         nextentry = None
@@ -387,56 +459,50 @@ class SvnStore(SimpleShellStoreBase):
             i = i + 1
         return entries
 
-    def current_version_id(self, title, kind):
-        i = self.svn_info(self.shell_quoted_file_(title, kind))
-        return i['Last Changed Rev']
-
-    def getitem(self, title, kind, defaultvalue, version = None, is_binary = False):
+    def getreadstream(self, key, version):
         if version:
-            return self.pipe_all('cat -r ' + version + ' ' + self.file_(title, kind))
+            return self.pipe('cat -r ' + version + ' ' + shell_quote(key)) or None
         else:
-            return FileStore.getitem(self, title, kind, defaultvalue, version, is_binary)
+            return FileStore.getreadstream(self, key, version)
 
-    def diff(self, title, kind, v1, v2):
-        return Diff.Diff(title, v1, v2,
+    def diff(self, key, kind, v1, v2):
+        return Diff.Diff(key, v1, v2,
                          self.pipe_lines('diff -r %s:%s %s' % \
-                                         (v1, v2, self.shell_quoted_file_(title, kind)),
+                                         (v1, v2, shell_quote(key, kind)),
                                          True))
 
     def process_transaction(self, changed, deleted):
         FileStore.process_transaction(self, changed, deleted)
         cmd = '( cd ' + self.dirname + ' && ('
-        touched = []
+        touched = ''
         if deleted:
-            cmd = cmd + ' svn delete'
-            for (title, kind) in deleted:
-                f = self.shell_quoted_file_(title, kind)
-                touched.append(f)
-                cmd = cmd + ' ' + f
-            cmd = cmd + ' ;'
+            keys = quote_keys(deleted)
+            cmd = cmd + ' svn delete ' + keys + ' ;'
+            touched = touched + ' ' + keys
         if changed:
-            cmd = cmd + ' svn add'
-            for (title, kind), (value, is_binary) in changed.items():
-                f = self.shell_quoted_file_(title, kind)
-                touched.append(f)
-                cmd = cmd + ' ' + f
-            cmd = cmd + ' ;'
+            keys = quote_keys(changed)
+            cmd = cmd + ' svn add ' + keys + ' ;'
+            touched = touched + ' ' + keys
         if touched:
-            cmd = cmd + ' svn commit -m "CvsStore" ' + ' '.join(touched)
+            cmd = cmd + ' svn commit -m "CvsStore"' + touched
             cmd = cmd + ' ; svn update )) >/dev/null 2>&1'
             os.system(cmd)
+
+class StringAccumulator(StringIO.StringIO):
+    def __init__(self):
+        StringIO.StringIO.__init__(self)
+
+    def close(self):
+        x = self.buf
+        StringIO.StringIO.close(self)
+        self.buf = x
 
 # Really only a pseudo-transaction, as it doesn't provide ACID
 class Transaction(Store):
     def __init__(self, backing):
-        Store.__init__(self, None)
-        self.basic_kind = backing.basic_kind
+        Store.__init__(self)
         self.backing = backing
         self.reset()
-
-    def set_basic_kind(self, new_basic_kind):
-        Store.set_basic_kind(self, new_basic_kind)
-        self.backing.set_basic_kind(new_basic_kind)
 
     def reset(self):
         self.changed = {}
@@ -444,49 +510,97 @@ class Transaction(Store):
 
     def keys(self):
         result = self.backing.keys()
-        result.extend([k[0] for k in self.changed.keys() if k[1] == self.basic_kind])
+        result.extend(k for k in self.changed.keys())
         return result
 
-    def keys_glob(self, titleglob):
-        result = self.backing.keys_glob(titleglob)
-        result.extend([k[0] for k in self.changed.keys()
-                       if k[1] == self.basic_kind and fnmatch.fnmatch(k[0], titleglob)])
+    def keys_glob(self, keyglob):
+        result = self.backing.keys_glob(keyglob)
+        result.extend(k for k in self.changed.keys() if fnmatch.fnmatch(k, keyglob))
         return result
 
-    def has_key(self, title):
-        return (self.backing.has_key(title) and (title, self.basic_kind) not in self.deleted) or \
-               (title, self.basic_kind) in self.changed
+    def has_key(self, key):
+        return (self.backing.has_key(key) and key not in self.deleted) or key in self.changed
 
-    def gethistory(self, title, kind):
-        return self.backing.gethistory(title, kind)
+    def gethistory(self, key):
+        return self.backing.gethistory(key)
 
-    def current_version_id(self, title, kind):
-        return self.backing.current_version_id(title, kind)
-
-    def getitem(self, title, kind, defaultvalue, version = None, is_binary = False):
+    def getreadstream(self, key, version):
         if version is None:
-            key = (title, kind)
             if key in self.changed:
-                return self.changed[key][0]
+                return StringIO.StringIO(self.changed[key].getvalue())
             elif key in self.deleted:
-                return defaultvalue
+                return None
             else:
                 pass
-        return self.backing.getitem(title, kind, defaultvalue, version, is_binary)
+        return self.backing.getreadstream(key, version)
 
-    def setitem(self, title, kind, value, is_binary = False):
-        key = (title, kind)
+    def getwritestream(self, key):
+        f = StringAccumulator()
         self.deleted.discard(key)
-        self.changed[key] = (value, is_binary)
+        self.changed[key] = f
+        return f
 
-    def delitem(self, title, kind):
-        key = (title, kind)
+    def delete(self, key):
         self.changed.pop(key, None)
         self.deleted.add(key)
 
-    def diff(self, title, kind, v1, v2):
-        return self.backing.diff(title, kind, v1, v2)
+    def message_encoder(self):
+        return self.backing.message_encoder()
+
+    def diff(self, key, v1, v2):
+        return self.backing.diff(key, v1, v2)
 
     def commit(self):
-        self.backing.process_transaction(self.changed, self.deleted)
+        changedvalues = {}
+        for key in self.changed:
+            changedvalues[key] = self.changed[key].getvalue()
+        self.backing.process_transaction(changedvalues, self.deleted)
         self.reset()
+
+class Item:
+    # Subclasses must provide self.default_properties, a dict
+
+    def __init__(self, store, key, version):
+        self.msgenc = store.message_encoder()
+        self.key = key
+        self.version = version
+        self._body = None
+        self.primitive_load()
+
+    def body(self):
+        if self._body is None:
+            self._body = self.msgenc.getbody(self.key, self.version)
+        return self._body
+
+    def exists(self):
+        return self.msgenc.has_key(self.key)
+
+    def primitive_load(self):
+        properties = self.msgenc.getheaders(self.key, self.version)
+        defaults = self.default_properties
+        for k in defaults:
+            setattr(self, k, properties.get(k, defaults[k]))
+
+    def primitive_save(self):
+        defaults = self.default_properties
+        properties = {}
+        for k in defaults:
+            properties[k] = getattr(self, k)
+        self.msgenc.setmessage(self.key, properties, self.body())
+
+    def primitive_delete(self):
+        self.msgenc.delete(self.key)
+
+    def history(self):
+        import Config
+        entries = self.msgenc.gethistory(self.key)
+        for entry in entries:
+            props = self.msgenc.getheaders(self.key, entry.version_id)
+            entry.author = props.get('author', '') or Config.anonymous_user
+        return entries
+
+    def friendly_version(self):
+        if self.version:
+            e = self.msgenc.gethistoryentry(self.key, self.version)
+            if e: return e.friendly_id
+        return self.version

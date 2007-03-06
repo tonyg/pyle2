@@ -30,11 +30,9 @@
       $page.render('html')
       <div class="footer">
 	<div>
-#set $mtime = $page.getmeta("Date", "")
-(last modified $escape($mtime)#slurp
-#set $modifier = $page.getmeta("Modifier", "")
-#if $modifier
- by $modifier)
+(last modified $escape($page.timestamp)#slurp
+#if $page.author
+ by $page.author)
 #else
  by $Config.anonymous_user)
 #end if

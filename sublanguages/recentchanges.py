@@ -7,7 +7,7 @@ class RecentChanges(Core.Renderable):
         self.count = count
 
     def prerender(self, format):
-        self.changes = web.ctx.cache.getpickle('changes', 'changelog', [])
+        self.changes = web.ctx.cache.getpickle('changes', [])
         if self.count is not None:
             self.changes = self.changes[-self.count:]
 

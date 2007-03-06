@@ -8,7 +8,7 @@ class InternalLink(Core.Renderable):
 	if not vistext:
 	    vistext = pagename
 
-	self.pageexists = web.ctx.store.has_key(pagename)
+	self.pageexists = web.ctx.store.message_encoder().has_key(pagename + '.txt')
 	if (not service or service == 'read') and not self.pageexists:
 	    service = 'edit'
 	self.pagename = pagename

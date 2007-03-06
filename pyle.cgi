@@ -12,6 +12,7 @@ import User
 import hmac
 import urllib
 import os
+import re
 
 urls = (
     '/([^/]*)', 'read',
@@ -239,7 +240,7 @@ class save(PageAction):
 
     def handle_request(self, pagename):
         self.init_page(pagename)
-        self.page.setText(self.input.body)
+        self.page.setbody(self.input.body)
         self.page.save(self.user())
         web.seeother(RenderUtils.internal_link_url(self.page.title))
 
@@ -362,11 +363,29 @@ class search(Action):
         self.keywords = [k for k in self.input.get('q', '').split(' ') if k]
         if self.keywords:
             self.ran_search = True
-            self.results = self.ctx.store.search(self.keywords)
+            self.results = self.run_search()
         else:
             self.ran_search = False
             self.results = []
         Action.handle_request(self)
+
+    def run_search(self):
+        regexes = [re.compile(re.escape(k), re.IGNORECASE) for k in self.keywords]
+        result = []
+        msgenc = self.ctx.store.message_encoder()
+        for key in msgenc.keys_glob('*.txt'):
+            pagetitle = key[:-4] # chop off '.txt'
+            text = msgenc.getbody(key, None)
+            if text is not None:
+                score = 0
+                headerscore = 0
+                for r in regexes:
+                    headerscore = len(r.findall(pagetitle))
+                    score = score + len(r.findall(text)) + headerscore
+                if score:
+                    result.append((score, bool(headerscore), pagetitle))
+        result.sort(None, lambda r: r[0], True)
+        return result
 
     def templateName(self):
         return 'action_search'

@@ -49,7 +49,7 @@
 	      View version:
 	      <select name="version">
 		#for $entry in $a.history
-		<option value="$entry.version_id">$entry.friendly_id ($entry.who)</option>
+		<option value="$entry.version_id">$entry.friendly_id ($entry.author)</option>
 		#end for
 	      </select>
 	      <input type="submit" value="Go" />

@@ -17,8 +17,7 @@ class User:
         return True
 
     def load_properties(self):
-        props = Config.user_data_store.getpickle(self.username, 'user',
-                                                 Config.default_user_properties)
+        props = Config.user_data_store.getpickle(self.username, Config.default_user_properties)
         self.email = props.get('email', None)
         self.subscriptions = props.get('subscriptions', [])
         self.superuser_flag = props.get('superuser_flag', False)
@@ -40,7 +39,7 @@ class User:
             'subscriptions': self.subscriptions,
             'superuser_flag': self.superuser_flag,
             }
-        Config.user_data_store.setpickle(self.username, 'user', props)
+        Config.user_data_store.setpickle(self.username, props)
 
 class Anonymous(User):
     def __init__(self):

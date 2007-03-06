@@ -11,6 +11,7 @@ import time
 import rfc822
 import User
 import re
+import Store
 
 def skinfile(file):
     return os.path.join(Config.skin, file)
@@ -224,135 +225,83 @@ def normalize_newlines(s):
 def log_change(d, when = None):
     if not when:
         when = time.time()
-    oldchanges = web.ctx.cache.getpickle('changes', 'changelog', [])
+    oldchanges = web.ctx.cache.getpickle('changes', [])
     d['when'] = when
     oldchanges.append(d)
-    web.ctx.cache.setpickle('changes', 'changelog', oldchanges)
+    web.ctx.cache.setpickle('changes', oldchanges)
 
-class Attachment:
+class Attachment(Store.Item):
     def __init__(self, pagetitle, name, version):
+        Store.Item.__init__(self,
+                            web.ctx.attachments,
+                            pagetitle + '.attach.' + name,
+                            version)
         self.pagetitle = pagetitle
         self.name = name
-        self.version = version
-        self._load()
 
-    def _key(self, kind):
-        return self.pagetitle + '.attach' + kind + '.' + self.name
-
-    def _load(self):
-        props = web.ctx.attachments.getpickle(self._key('meta'), None, {}, self.version)
-        self.mimetype = props.get('mimetype', 'application/octet-stream')
-        self.creator = props.get('creator', '')
-        self.bodylen = props.get('bodylen', None)
-        self._body = None
-
-    def exists(self):
-        return web.ctx.attachments.has_key(self._key('meta'))
-
-    def save(self):
-        props = {
-            'mimetype': self.mimetype,
-            'creator': self.creator,
-            'bodylen': self.bodylen,
-            }
-        web.ctx.attachments.setpickle(self._key('meta'), None, props)
-        web.ctx.attachments.setitem(self._key('file'), None, self.body(), is_binary = True)
-
-    def delete(self):
-        web.ctx.attachments.delitem(self._key('meta'), None)
-        web.ctx.attachments.delitem(self._key('file'), None)
-
-    def history(self):
-        entries = web.ctx.attachments.gethistory(self._key('file'), None)
-        for entry in entries:
-            meta = web.ctx.attachments.getpickle(self._key('meta'), None, {}, entry.version_id)
-            entry.who = meta.get('creator', '') or Config.anonymous_user
-        return entries
+    default_properties = {
+        'mimetype': 'application/octet-stream',
+        'author': '',
+        'bodylen': '0',
+        }
 
     def body(self):
         if not self._body:
-            self._body = web.ctx.attachments.getitem(self._key('file'), None, '', self.version,
-                                                     is_binary = True)
-            self.bodylen = len(self._body)
+            Store.Item.body(self)
+            self.bodylen = str(len(self._body))
         return self._body
 
     def setbody(self, newbody):
         self._body = newbody
-        self.bodylen = len(self._body)
+        self.bodylen = str(len(self._body))
+
+    def save(self):
+        self.primitive_save()
+
+    def delete(self):
+        self.primitive_delete()
 
     def url(self):
         return web.ctx.home + '/' + self.pagetitle + '/attach/' + self.name
 
-class Page(Section):
+class Page(Section, Store.Item):
     def __init__(self, title, version = None):
+        Store.Item.__init__(self, web.ctx.store, title + '.txt', version)
         Section.__init__(self, 0, title)
-	self.store = web.ctx.store
 	self.cache = web.ctx.cache
-        self.version = version
         self.notify_required = False
-	self.load_()
-
-    def load_(self):
-        self.meta = self.store.getpickle(self.title, 'meta', {}, self.version)
-        self._text = None
         self.container_items = None
         self._mediacache = None
 
-    def text(self):
-        if self._text is None:
-            self._text = self.store.getitem(self.title, 'txt', None, self.version)
-            if self._text is None:
-                self._text = str(DefaultPageContent(self.title).render('txt'))
-        return self._text
+    default_properties = {
+        'timestamp': rfc822.formatdate(0),
+        'author': '',
+        }
 
-    def newest_stored_version(self):
-        return self.store.current_version_id(self.title, 'txt')
+    def body(self):
+        if self._body is None:
+            if self.exists():
+                return Store.Item.body(self)
+            else:
+                self._body = str(DefaultPageContent(self.title).render('txt'))
+        return self._body
 
-    def history(self):
-        entries = self.store.gethistory(self.title, 'txt')
-        for entry in entries:
-            meta = self.store.getpickle(self.title, 'meta', {}, entry.version_id)
-            entry.who = meta.get('Modifier', '') or Config.anonymous_user
-        return entries
-
-    def friendly_version(self):
-        if self.version:
-            e = self.store.gethistoryentry(self.title, 'txt', self.version)
-            if e: return e.friendly_id
-        return self.version
-
-    def exists(self):
-        return self.store.has_key(self.title)
-
-    def getmeta(self, name, defaultValue = ''):
-        return self.meta.get(name, defaultValue)
-
-    def setmeta(self, name, value):
-        self.meta[name] = value
-
-    def getmetadate(self, name, defaultValue = None):
-        s = self.getmeta(name, None)
-        if s:
-            return time.mktime(rfc822.parsedate(s))
-        else:
-            return defaultValue
-
-    def setmetadate(self, name, t):
-        self.setmeta(name, rfc822.formatdate(t))
+    def timestamp_epoch(self):
+        return time.mktime(rfc822.parsedate(self.timestamp))
 
     def _preprocess(self, s):
         return normalize_newlines(s)
 
-    def setText(self, newtext):
+    def setbody(self, newtext):
         newtext = self._preprocess(newtext)
-        self.notify_required = self.notify_required or (self._text != newtext)
-	self._text = newtext
+        self.notify_required = self.notify_required or (self._body != newtext)
+	self._body = newtext
         self.reset_cache()
 
     def prerender(self, format):
         if not self.version:
-            self.container_items = self.cache.getpickle(self.title, 'tree', None)
-            self._mediacache = self.cache.getpickle(self.title, 'mediacache', {})
+            self.container_items = self.cache.getpickle(self.title + '.tree', None)
+            self._mediacache = self.cache.getpickle(self.title + '.mediacache', {})
             if self.container_items is not None:
                 return
 
@@ -360,13 +309,13 @@ class Page(Section):
         self._mediacache = {}
 
         web.ctx.active_page = self
-	doc = Block.parsestring(self.text())
+	doc = Block.parsestring(self.body())
 	PyleBlockParser(self).visit(doc.children)
         web.ctx.active_page = None
 
         if not self.version:
-            self.cache.setpickle(self.title, 'tree', self.container_items)
-            self.cache.setpickle(self.title, 'mediacache', self._mediacache)
+            self.cache.setpickle(self.title + '.tree', self.container_items)
+            self.cache.setpickle(self.title + '.mediacache', self._mediacache)
 
     def mediacache(self):
         if self._mediacache is None:
@@ -375,32 +324,28 @@ class Page(Section):
 
     def save(self, user):
         savetime = time.time()
-        self.setmetadate('Date', savetime)
-        self.setmeta('Modifier', user.getusername())
-        self.inner_save()
+        self.timestamp = rfc822.formatdate(savetime)
+        self.author = user.getusername()
+        self.primitive_save()
         self.log_change('saved', user, savetime)
         self.notify_subscribers(user)
 
-    def inner_save(self):
-        self.store.setpickle(self.title, 'meta', self.meta)
-	self.store.setitem(self.title, 'txt', self._text)
-
     def reset_cache(self):
-        self.cache.delitem(self.title, 'tree')
-        self.cache.delitem(self.title, 'mediacache')
+        self.cache.delete(self.title + '.tree')
+        self.cache.delete(self.title + '.mediacache')
 
     def delete(self, user):
         self.reset_cache()
-        self.store.delitem(self.title, 'meta')
-        self.store.delitem(self.title, 'txt')
+        self.primitive_delete()
         for name in self.attachment_names():
             Attachment(self.title, name, None).delete()
         self.log_change('deleted', user)
 
     def attachment_names(self):
-        prefix = self.title + '.attachmeta.'
+        prefix = self.title + '.attach.'
         prefixlen = len(prefix)
-        return [f[prefixlen:] for f in web.ctx.attachments.keys_glob(prefix + '*')]
+        return [f[prefixlen:]
+                for f in web.ctx.attachments.message_encoder().keys_glob(prefix + '*')]
 
     def get_attachments(self):
         return [Attachment(self.title, name, None) for name in self.attachment_names()]
@@ -411,10 +356,10 @@ class Page(Section):
     def backlinks(self):
         result = []
         r = re.compile(r'\b' + re.escape(self.title) + r'\b')
-        for otherpage in self.store.keys():
-            othertext = self.store.getitem(otherpage, 'txt', '')
+        for otherpage in self.msgenc.keys_glob('*.txt'):
+            othertext = self.msgenc.getbody(otherpage, None)
             if r.search(othertext):
-                result.append(otherpage)
+                result.append(otherpage[:-4]) # chop off the '.txt'
         return result
 
     def subscribers(self):
@@ -451,6 +396,4 @@ app_initialised = 0
 def init_pyle():
     global app_initialised
     if not app_initialised:
-        Config.user_data_store.set_basic_kind('user')
-        Config.attachment_store.set_basic_kind(None)
-        app_initialised = 1
+        pass

@@ -20,16 +20,27 @@
       #if $ran_search
       #if $results
       <p>
-	Searching for $keywords returned $len($results) results:
+	Searching for "#echo ' '.join($keywords)#" returned $len($results) results:
       </p>
       <ul class="searchresults">
-	#for ($score, $pagename) in $results
+	#set $have_headermatch = 0
+	#for ($score, $in_header, $pagename) in $results
+	#if $in_header
+	#set $have_headermatch = 1
+	<li><b>$internal_link($pagename) ($score)</b></li>
+	#else
 	<li>$internal_link($pagename) ($score)</li>
+	#end if
 	#end for
       </ul>
+      #if $have_headermatch
+      <p>
+	(pages marked in <b>bold</b> contain a search term in their page title)
+      </p>
+      #end if
       #else
       <p>
-	Your search for $keywords returned no results.
+	Your search for "#echo ' '.join($keywords)#" returned no results.
       </p>
       #end if
       #end if
