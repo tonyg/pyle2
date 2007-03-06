@@ -19,7 +19,7 @@ warnings.filterwarnings('ignore',
 
 class Store:
     def __init__(self):
-        pass
+	self._encoder = self.message_encoder_class(self)
 
     def keys(self):
         subClassResponsibility()
@@ -43,7 +43,7 @@ class Store:
         subClassResponsibility()
 
     def message_encoder(self):
-        subClassResponsibility()
+        return self._encoder
 
     def getbinary(self, key, defaultvalue, version = None):
         f = self.getreadstream(key, version)
@@ -174,6 +174,9 @@ class CompoundMessageEncoder:
     def gethistoryentry(self, key, version):
         return self.store.gethistoryentry(key, version)
 
+    def diff(self, key, v1, v2):
+        return self.store.diff(key, v1, v2)
+
 class SplitMessageEncoder:
     def __init__(self, store):
         self.store = store
@@ -223,6 +226,9 @@ class SplitMessageEncoder:
     def gethistoryentry(self, key, version):
         return self.store.gethistoryentry('data.' + key, version)
 
+    def diff(self, key, v1, v2):
+        return self.store.diff('data.' + key, v1, v2)
+
 class HistoryEntry:
     def __init__(self, version_id, friendly_id, timestamp):
         self.version_id = version_id
@@ -235,7 +241,8 @@ class FileStore(Store):
     def __init__(self, dirname):
         Store.__init__(self)
 	self.dirname = dirname
-        self._encoder = SplitMessageEncoder(self)
+
+    message_encoder_class = SplitMessageEncoder
 
     def path_(self, key):
 	return os.path.join(self.dirname, key)
@@ -269,9 +276,6 @@ class FileStore(Store):
             os.unlink(self.path_(key))
         except exceptions.OSError:
             pass
-
-    def message_encoder(self):
-        return self._encoder
 
 def parse_cvs_timestamp(s):
     m = re.match('(\d+)[/-](\d+)[/-](\d+) +(\d+):(\d+):(\d+)( +([^ ]+))?', s)
@@ -341,7 +345,8 @@ class SimpleShellStoreBase(FileStore):
 class CvsStore(SimpleShellStoreBase):
     def __init__(self, dirname):
         SimpleShellStoreBase.__init__(self, dirname)
-        self._encoder = CompoundMessageEncoder(self)
+
+    message_encoder_class = CompoundMessageEncoder
 
     def shell_command(self, text):
         return 'cd ' + self.dirname + ' && cvs ' + text + ' 2>/dev/null'
@@ -465,10 +470,10 @@ class SvnStore(SimpleShellStoreBase):
         else:
             return FileStore.getreadstream(self, key, version)
 
-    def diff(self, key, kind, v1, v2):
+    def diff(self, key, v1, v2):
         return Diff.Diff(key, v1, v2,
                          self.pipe_lines('diff -r %s:%s %s' % \
-                                         (v1, v2, shell_quote(key, kind)),
+                                         (v1, v2, shell_quote(key)),
                                          True))
 
     def process_transaction(self, changed, deleted):
@@ -500,6 +505,7 @@ class StringAccumulator(StringIO.StringIO):
 # Really only a pseudo-transaction, as it doesn't provide ACID
 class Transaction(Store):
     def __init__(self, backing):
+	self.message_encoder_class = backing.message_encoder_class
         Store.__init__(self)
         self.backing = backing
         self.reset()
@@ -543,9 +549,6 @@ class Transaction(Store):
     def delete(self, key):
         self.changed.pop(key, None)
         self.deleted.add(key)
-
-    def message_encoder(self):
-        return self.backing.message_encoder()
 
     def diff(self, key, v1, v2):
         return self.backing.diff(key, v1, v2)

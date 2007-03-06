@@ -191,9 +191,12 @@ class diff(Action):
         return not Config.allow_anonymous_view
 
     def handle_request(self, pagename):
-        self.v1 = self.ctx.store.gethistoryentry(pagename, 'txt', self.input.v1)
-        self.v2 = self.ctx.store.gethistoryentry(pagename, 'txt', self.input.v2)
-        self.diff = self.ctx.store.diff(pagename, 'txt', self.input.v1, self.input.v2)
+        key = pagename + '.txt'
+        msgenc = self.ctx.store.message_encoder()
+        self.v1 = msgenc.gethistoryentry(key, self.input.v1)
+        self.v2 = msgenc.gethistoryentry(key, self.input.v2)
+        self.diff = msgenc.diff(key, self.input.v1, self.input.v2)
+	self.pagetitle = pagename
         Action.handle_request(self)
 
     def templateName(self):

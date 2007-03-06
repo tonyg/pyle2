@@ -1,7 +1,7 @@
 #import time
 <html>
   <head>
-    <title>Pyle: $escape($diff.title) v$v1.friendly_id - v$v2.friendly_id</title>
+    <title>Pyle: $escape($pagetitle) v$v1.friendly_id - v$v2.friendly_id</title>
     #include $skinfile("common_html_headers.html")
   </head>
   <body>
@@ -9,10 +9,10 @@
       <div class="title">
 	#include $skinfile("common_page_headers.html")
 	<h1>
-	  $internal_link($diff.title)
-	  v$internal_link($diff.title, vistext = $v1.friendly_id, args = {'version': $diff.v1})
+	  $internal_link($pagetitle)
+	  v$internal_link($pagetitle, vistext = $v1.friendly_id, args = {'version': $diff.v1})
 	  -
-	  v$internal_link($diff.title, vistext = $v2.friendly_id, args = {'version': $diff.v2})
+	  v$internal_link($pagetitle, vistext = $v2.friendly_id, args = {'version': $diff.v2})
 	</h1>
 	<div class="clear"></div>
       </div>
@@ -27,7 +27,7 @@
 #set $arrow = '&mdash;&gt;'
 #end if
 #if $vv1 and $vv2
-$internal_link($diff.title, 'diff', vistext = $arrow,
+$internal_link($pagetitle, 'diff', vistext = $arrow,
                args = {'v1': $vv1.version_id, 'v2': $vv2.version_id})
 #else
 $arrow
