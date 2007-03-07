@@ -111,6 +111,19 @@ class BugzillaAuthenticator(Authenticator):
             username = username + '@' + self.default_email_suffix
         return BugzillaUser(username)
 
+class FilteringAuthenticator(Authenticator):
+    def __init__(self, filterfunction, backing):
+        self.filterfunction = filterfunction
+        self.backing = backing
+
+    def authenticate(self, user, password):
+        if not self.filterfunction(user.getusername()):
+            return False
+        return self.backing.authenticate(user, password)
+
+    def lookup_user(self, username):
+        return self.backing.lookup_user(username)
+
 ###########################################################################
 
 anonymous = Anonymous()

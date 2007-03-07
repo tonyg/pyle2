@@ -47,6 +47,19 @@ user_authenticator = \
                                    default_email_suffix = 'lshift.net',
                                    success_regex = '<h1>Logged Out</h1>')
 
+# A FilteringAuthenticator can be used to restrict access to a
+# particular instance to a certain subset of otherwise-valid users,
+# after authenticating with some base authenticator (such as a
+# BugzillaAuthenticator). The example below authenticates first with
+# whatever user_authenticator is configured above, and then checks the
+# username against a "permitted" list. Other variants are possible:
+# explicit "deny" lists, group membership, use of re.match to check
+# usernames, etc etc.
+#
+# def my_filter_function(username):
+#     return username in ['permittedusername1', 'permittedusername2']
+# user_authenticator = User.FilteringAuthenticator(my_filter_function, user_authenticator)
+
 # How should Pyle store user properties?
 user_data_store = Store.FileStore('./pyledb_users')
 
