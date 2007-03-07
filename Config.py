@@ -71,15 +71,18 @@ user_authenticator = \
 user_data_store = Store.FileStore('./pyledb_users')
 
 # URL of web-based user creation service; None to disable
+#user_creation_service = None
 user_creation_service = 'https://extra.lshift.net/bugzilla/createaccount.cgi'
 
 # URL of web-based password change service; None to disable
+#password_change_service = None
 password_change_service = 'https://extra.lshift.net/bugzilla/userprefs.cgi'
 
 # What defaults should Pyle use for user properties?
 default_user_properties = {}
 
-# Name of anonymous users
+# Name to display when no other name is available; used when referring
+# to actions taken by anonymous users
 anonymous_user = "Anonymous"
 
 # Allow anonymous editing of pages?
