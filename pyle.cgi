@@ -171,6 +171,10 @@ class PageAction(Action):
         self.init_page(pagename)
         Action.handle_request(self)
 
+class EditPageAction(PageAction):
+    def login_required(self):
+        return not Config.allow_anonymous_edit
+
 class read(PageAction):
     def templateName(self):
         return 'action_read'
@@ -230,27 +234,18 @@ class subscribe(PageAction):
     def templateName(self):
         return 'action_subscribe'
 
-class edit(PageAction):
-    def login_required(self):
-        return not Config.allow_anonymous_edit
-
+class edit(EditPageAction):
     def templateName(self):
         return 'action_edit'
 
-class save(PageAction):
-    def login_required(self):
-        return not Config.allow_anonymous_edit
-
+class save(EditPageAction):
     def handle_request(self, pagename):
         self.init_page(pagename)
         self.page.setbody(self.input.body)
         self.page.save(self.user())
         web.seeother(RenderUtils.internal_link_url(self.page.title))
 
-class delete(PageAction):
-    def login_required(self):
-        return not Config.allow_anonymous_edit
-
+class delete(EditPageAction):
     def handle_request(self, pagename):
         if self.input.get('delete_confirmed', ''):
             self.init_page(pagename)
@@ -263,9 +258,6 @@ class delete(PageAction):
         return 'action_delete'
 
 class getattach(PageAction):
-    def login_required(self):
-        return not Config.allow_anonymous_view
-
     def handle_request(self, pagename, attachname):
         self.init_page(pagename)
         a = self.page.get_attachment(attachname, self.input.get('version', None))
@@ -273,17 +265,11 @@ class getattach(PageAction):
         web.header('Content-Length', len(a.body()))
         web.output(a.body())
 
-class editattach(PageAction):
-    def login_required(self):
-        return not Config.allow_anonymous_edit
-
+class editattach(EditPageAction):
     def templateName(self):
         return 'action_editattach'
 
-class updateattach(PageAction):
-    def login_required(self):
-        return not Config.allow_anonymous_edit
-
+class updateattach(EditPageAction):
     def handle_request(self, pagename):
         self.init_page(pagename)
 
@@ -301,10 +287,7 @@ class updateattach(PageAction):
         self.page.reset_cache()
         web.seeother(RenderUtils.internal_link_url(pagename, 'attach'))
 
-class delattach(PageAction):
-    def login_required(self):
-        return not Config.allow_anonymous_edit
-
+class delattach(EditPageAction):
     def handle_request(self, pagename):
         self.attachname = self.input.name
         if self.input.get('delete_confirmed', ''):
