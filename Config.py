@@ -10,6 +10,13 @@ skin = 'templates'
 # Session signing passphrase (erk)
 session_passphrase = 'changeit'
 
+# Session expiry time, in seconds; use -1 for infinite
+# Each time the session is checked, its expiry timer is reset,
+# so if session_expiry_time is 5, it will expire five seconds
+# after the user's most recent action (unless another action
+# comes in to reset the timer).
+session_expiry_time = -1
+
 # Name of default page
 frontpage = 'FrontPage'
 

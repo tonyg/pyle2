@@ -13,6 +13,7 @@ import hmac
 import urllib
 import os
 import re
+import time
 
 urls = (
     '/([^/]*)', 'read',
@@ -42,6 +43,8 @@ def mac(str):
 def newSession():
     return web.storage({
         'username': None,
+        'ip': web.ctx.ip,
+        'issuetime': time.time(),
         })
 
 class LoginPage(Core.Renderable):
@@ -84,9 +87,21 @@ class Action(Core.Renderable):
                     self.session = pickle.loads(sessionpickle)
         except:
             pass
+        self.checkSession_()
         if not self.session:
             self.session = newSession()
         self._user = None
+
+    def checkSession_(self):
+        if self.session and self.session.get("ip", '') != web.ctx.ip:
+            self.session = None
+        if self.session and Config.session_expiry_time != -1:
+            issuetime = self.session.get("issuetime", 0)
+            now = time.time()
+            if now - issuetime >= Config.session_expiry_time:
+                self.session = None
+            else:
+                self.session.issuetime = now
 
     def user(self):
         if not self._user:
