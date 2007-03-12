@@ -45,6 +45,15 @@ class Chunk:
         else:
             self.kind = 'nothing'
 
+    def reverse(self):
+        t = self.chunk1
+        self.chunk1 = self.chunk2
+        self.chunk2 = t
+        t = self.linenumber1
+        self.linenumber1 = self.linenumber2
+        self.linenumber2 = t
+        self.finish()
+
 class Diff:
     def __init__(self, title, v1, v2, difflines):
         self.title = title
@@ -58,6 +67,7 @@ class Diff:
         if self.chunk:
             self.chunk.finish()
             self.chunks.append(self.chunk)
+            self.chunk = None
 
     def parse_result(self, result):
         for line in result:
@@ -71,3 +81,10 @@ class Diff:
                     self.chunk = Chunk(None, None)
                     self.chunk.extend(line[0], line[1:])
         self.finish_chunk()
+
+    def reverse(self):
+        t = self.v1
+        self.v1 = self.v2
+        self.v2 = t
+        for chunk in self.chunks:
+            chunk.reverse()

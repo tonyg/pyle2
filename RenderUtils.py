@@ -54,7 +54,7 @@ def escapeall(lines):
     return map(escape, lines)
 
 def escapeallpre(lines):
-    return ''.join([escape(x).replace('\n', '&nbsp;\n') for x in lines])
+    return ''.join([escape(x).replace('\n', '&nbsp;<br />') for x in lines])
 
 def aescape(s):
     s = escape(s)

@@ -230,12 +230,17 @@ class SplitMessageEncoder:
         return self.store.diff('data.' + key, v1, v2)
 
 class HistoryEntry:
-    def __init__(self, version_id, friendly_id, timestamp):
+    def __init__(self, version_id, friendly_id, timestamp, next_entry = None):
         self.version_id = version_id
         self.friendly_id = friendly_id
         self.timestamp = timestamp
         self.previous = None
-        self.next = None
+        self.next = next_entry
+        if next_entry:
+            next_entry.previous = self
+
+    def __cmp__(self, other):
+        return cmp(self.timestamp, other.timestamp)
 
 class FileStore(Store):
     def __init__(self, dirname):
@@ -303,6 +308,7 @@ class SimpleShellStoreBase(FileStore):
     def __init__(self, dirname):
         FileStore.__init__(self, dirname)
         self.history_cache = {}
+        self.version_cache = {}
 
     def ensure_history_for(self, key):
         if not self.history_cache.has_key(key):
@@ -334,6 +340,17 @@ class SimpleShellStoreBase(FileStore):
         f.close()
         return result
 
+    def getreadstream(self, key, version):
+        if version:
+            k = (key, version)
+            if not self.version_cache.has_key(k):
+                f = self.old_readstream(key, version)
+                self.version_cache[k] = f.read()
+                f.close()
+            return StringIO.StringIO(self.version_cache[k])
+        else:
+            return FileStore.getreadstream(self, key, version)
+
     def getwritestream(self, key):
         self.history_cache.pop(key, None)
         return FileStore.getwritestream(self, key)
@@ -356,7 +373,7 @@ class CvsStore(SimpleShellStoreBase):
         entries = []
         versionmap = {}
         i = 0
-        nextentry = None
+        entry = None
         while i < len(lines):
             if lines[i] == '----------------------------':
                 revision = lines[i+1].split(' ')[1]
@@ -370,11 +387,7 @@ class CvsStore(SimpleShellStoreBase):
                 timestamp = parse_cvs_timestamp(fmap['date'])
 
                 versionmap[versionid] = revision
-                entry = HistoryEntry(versionid, revision, timestamp)
-                if nextentry:
-                    nextentry.previous = entry
-                    entry.next = nextentry
-                nextentry = entry
+                entry = HistoryEntry(versionid, revision, timestamp, entry)
                 entries.append(entry)
                 i = i + 2
             i = i + 1
@@ -384,16 +397,13 @@ class CvsStore(SimpleShellStoreBase):
         (versionmap, entries) = self.ensure_history_for(key)
         return entries
 
-    def getreadstream(self, key, version):
-        if version:
-            (versionmap, entries) = self.ensure_history_for(key)
-            if versionmap.has_key(version):
-                revision = versionmap[version]
-                return self.pipe('update -r ' + revision + ' -p ' + shell_quote(key)) or None
-            else:
-                return None
+    def old_readstream(self, key, version):
+        (versionmap, entries) = self.ensure_history_for(key)
+        if versionmap.has_key(version):
+            revision = versionmap[version]
+            return self.pipe('update -r ' + revision + ' -p ' + shell_quote(key)) or None
         else:
-            return FileStore.getreadstream(self, key, version)
+            return None
 
     def diff(self, key, v1, v2):
         (versionmap, entries) = self.ensure_history_for(key)
@@ -447,7 +457,7 @@ class SvnStore(SimpleShellStoreBase):
         lines = self.pipe_lines('log ' + shell_quote(key))
         entries = []
         i = 0
-        nextentry = None
+        entry = None
         while i + 1 < len(lines):
             if lines[i] == \
                    '------------------------------------------------------------------------':
@@ -455,20 +465,13 @@ class SvnStore(SimpleShellStoreBase):
                 if len(fields) > 1:
                     versionid = fields[0][1:]
                     timestamp = parse_cvs_timestamp(fields[2])
-                    entry = HistoryEntry(versionid, versionid, timestamp)
-                    if nextentry:
-                        nextentry.previous = entry
-                        entry.next = nextentry
-                    nextentry = entry
+                    entry = HistoryEntry(versionid, versionid, timestamp, entry)
                     entries.append(entry)
             i = i + 1
         return entries
 
-    def getreadstream(self, key, version):
-        if version:
-            return self.pipe('cat -r ' + version + ' ' + shell_quote(key)) or None
-        else:
-            return FileStore.getreadstream(self, key, version)
+    def old_readstream(self, key, version):
+        return self.pipe('cat -r ' + version + ' ' + shell_quote(key)) or None
 
     def diff(self, key, v1, v2):
         return Diff.Diff(key, v1, v2,
@@ -491,6 +494,101 @@ class SvnStore(SimpleShellStoreBase):
         if touched:
             cmd = cmd + ' svn commit -m "CvsStore"' + touched
             cmd = cmd + ' ; svn update )) >/dev/null 2>&1'
+            os.system(cmd)
+
+class DarcsStore(SimpleShellStoreBase):
+    def __init__(self, dirname, author_email):
+        SimpleShellStoreBase.__init__(self, dirname)
+        self.author_email = author_email
+
+    def shell_command(self, text):
+        return 'cd ' + self.dirname + ' && darcs ' + text + ' 2>/dev/null'
+
+    def gethistory(self, key):
+        (versionmap, entries) = self.ensure_history_for(key)
+        return entries
+
+    def compute_history_for(self, key):
+        import xml.dom.minidom
+        f = self.pipe('changes --xml-output ' + shell_quote(key))
+        dom = xml.dom.minidom.parse(f)
+        f.close()
+        entries = []
+        versionmap = {}
+        for patch in dom.getElementsByTagName("patch"):
+            revision = patch.attributes['hash'].value
+            date = time.strptime(patch.attributes['local_date'].value,
+                                 '%a %b %d %H:%M:%S %Z %Y')
+            friendly = time.strftime('%Y%m%d%H%M%S', date)
+            versionmap[revision] = friendly
+            entry = HistoryEntry(revision, friendly, time.mktime(date))
+            entries.append(entry)
+        entries.sort(reverse = True)
+        nextentry = None
+        linkedentries = []
+        for entry in entries:
+            if nextentry and nextentry.version_id == entry.version_id:
+                pass
+            else:
+                if nextentry:
+                    entry.next = nextentry
+                    nextentry.previous = entry
+                nextentry = entry
+                linkedentries.append(entry)
+        return (versionmap, linkedentries)
+
+    def old_readstream(self, key, version):
+        entry = self.gethistoryentry(key, version)
+        tmpdir = os.tmpnam()
+        cmd = 'darcs get --to-match="hash %s" %s %s >/dev/null' % \
+              (entry.version_id, shell_quote(self.dirname), shell_quote(tmpdir))
+        os.system(cmd)
+        try:
+            f = open(os.path.join(tmpdir, key), 'rb')
+            os.system('rm -rf %s' % (shell_quote(tmpdir),))
+            return f
+        except IOError:
+            os.system('rm -rf %s' % (shell_quote(tmpdir),))
+            return None
+
+    def diff(self, key, v1, v2):
+        e1 = self.gethistoryentry(key, v1)
+        e2 = self.gethistoryentry(key, v2)
+        if e1 and e2 and e1 > e2:
+            reversal = True
+            t = e1
+            e1 = e2
+            e2 = t
+        else:
+            reversal = False
+        if e1: e1 = e1.next
+        if e1 and e2:
+            d = Diff.Diff(key, v1, v2,
+                          self.pipe_lines(('diff -u --from-match="hash %s" ' \
+                                           '--to-match="hash %s" %s') \
+                                          % (e1.version_id, e2.version_id, shell_quote(key)),
+                                          True))
+            if reversal:
+                d.reverse()
+            return d
+        else:
+            return Diff.Diff(key, v1, v2, [])
+
+    def process_transaction(self, changed, deleted):
+        FileStore.process_transaction(self, changed, deleted)
+        cmd = '( cd ' + self.dirname + ' && ('
+        touched = ''
+        if deleted:
+            keys = quote_keys(deleted)
+            touched = touched + ' ' + keys
+        if changed:
+            keys = quote_keys(changed)
+            cmd = cmd + ' darcs add ' + keys + ' ;'
+            touched = touched + ' ' + keys
+        if touched:
+            cmd = cmd + ' darcs record -a --author=' + shell_quote(self.author_email) + \
+                  ' -m "CvsStore"' + touched
+            cmd = cmd + ' )) >/dev/null 2>&1'
             os.system(cmd)
 
 class StringAccumulator(StringIO.StringIO):

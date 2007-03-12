@@ -185,9 +185,10 @@ div.toc ul {
 	margin: 0pt;
 }
 
-div.diff pre {
+div.diff div.body {
 	margin: 0em;
-	font-family: 'georgia', 'times new roman', serif;
+	padding-left: 0.3em;
+	padding-right: 0.3em;
 }
 
 div.diff .old {

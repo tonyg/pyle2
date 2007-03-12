@@ -27,9 +27,11 @@ linkpattern = r'\b([A-Z]+[a-z0-9]+){2,}'
 file_store = Store.FileStore('./pyledb')
 #file_store = Store.CvsStore('./cvstest/data')
 #file_store = Store.SvnStore('./cvstest/trunk')
+#file_store = Store.DarcsStore('./darcs-pyledb', 'darcs-pyle-daemon@lshift.net')
 
 # Location for attachments, or None to disable attachments
 attachment_store = Store.FileStore('./pyledb/attachments')
+#attachment_store = Store.DarcsStore('./darcs-pyledb/attachments', 'darcs-pyle-daemon@lshift.net')
 
 # Temporary cached data store.
 cache_store = Store.FileStore('./pyledb_cache')
