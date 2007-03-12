@@ -1,5 +1,3 @@
-import web
-import time
 import Core
 
 class BackLinks(Core.Renderable):

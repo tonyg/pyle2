@@ -278,6 +278,12 @@ class Page(Section, Store.Item):
         'author': '',
         }
 
+    def __getstate__(self):
+        return {'title': self.title, 'version': self.version}
+
+    def __setstate__(self, state):
+        self.__init__(state['title'], state['version'])
+
     def body(self):
         if self._body is None:
             if self.exists():
