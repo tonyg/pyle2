@@ -41,15 +41,15 @@ class PyleFtpFS(FtpServer.FlatFileSystem):
 		return 1
 
 	def allFilenames(self):
-		keys = self.file_store.keys()
+		keys = self.file_store.message_encoder().keys_glob('*.txt')
 		keys.sort()
-		return keys
+		return [k[:-4] for k in keys]
 
 	def contains(self, filename):
-		return self.file_store.has_key(filename)
+		return self.file_store.message_encoder().has_key(filename + '.txt')
 
 	def _retrieve_page(self, filename):
-		if not self.file_store.has_key(filename):
+		if not self.contains(filename):
 			raise FtpResponse(550, 'File not found')
 		return Core.Page(filename)
 
@@ -57,19 +57,19 @@ class PyleFtpFS(FtpServer.FlatFileSystem):
 		page = self._retrieve_page(filename)
 		if not page.readable_for(self.user):
 			raise FtpResponse(550, 'Read permission denied')
-		return page.text()
+		return page.body()
 
 	def lengthOf(self, filename):
 		page = self._retrieve_page(filename)
-		return len(page.text())
+		return len(page.body())
 
 	def userFor(self, filename):
 		page = self._retrieve_page(filename)
-		return page.getmeta('Modifier', '') or Config.anonymous_user
+		return page.author or Config.anonymous_user
 
 	def mtimeFor(self, filename):
 		page = self._retrieve_page(filename)
-		return page.getmetadate('Date', 0)
+		return page.timestamp_epoch()
 
 	def updateCheck(self, filename):
 		if filename.endswith('~'):
@@ -80,7 +80,7 @@ class PyleFtpFS(FtpServer.FlatFileSystem):
 
 	def updateContent(self, filename, newcontent):
 		page = self._retrieve_page(filename)
-		page.setText(newcontent)
+		page.setbody(newcontent)
 		page.save(self.user)
 		self.commit_transaction()
 		self.log_action('stor', [filename])
@@ -95,7 +95,7 @@ class PyleFtpFS(FtpServer.FlatFileSystem):
 
 if __name__ == '__main__':
 	Core.init_pyle()
-	svr = FtpServer.FtpServer(('', 8021), PyleFtpFS,
+	svr = FtpServer.FtpServer(('127.0.0.1', 8021), PyleFtpFS,
 				  bannerText = 'Pyle FTP service ready.')
 
 	if posix.getuid() == 0:
