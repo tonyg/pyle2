@@ -4,8 +4,9 @@
 import User
 import Store
 
-# Skin to use for display.
-skin = 'templates'
+# Skin to use for display. Should be a list of directories, which will
+# be tried in order.
+skin = ['templates']
 
 # Session signing passphrase (erk)
 session_passphrase = 'changeit'

@@ -14,7 +14,13 @@ import re
 import Store
 
 def skinfile(file):
-    return os.path.join(Config.skin, file)
+    p = file
+    for dir in Config.skin:
+        p = os.path.join(dir, file)
+        if os.path.exists(p):
+            return p
+    # None exist. Return the last in the list for error-reporting purposes.
+    return p
 
 class Renderable:
     def render(self, format):
