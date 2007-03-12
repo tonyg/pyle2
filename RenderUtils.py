@@ -8,16 +8,20 @@ class InternalLink(Core.Renderable):
 	if not vistext:
 	    vistext = pagename
 
-	self.pageexists = web.ctx.store.message_encoder().has_key(pagename + '.txt')
-	if (not service or service == 'read') and not self.pageexists:
-	    service = 'edit'
 	self.pagename = pagename
 	self.service = service
 	self.vistext = vistext
         self.args = args
 
     def url(self):
-        return internal_link_url(self.pagename, self.service, self.args)
+        if (not self.service or self.service == 'read') and not self.pageexists:
+            service = 'edit'
+        else:
+            service = self.service
+        return internal_link_url(self.pagename, service, self.args)
+
+    def prerender(self, format):
+        self.pageexists = web.ctx.store.message_encoder().has_key(self.pagename + '.txt')
 
     def templateName(self):
 	return 'pyle_internallink'

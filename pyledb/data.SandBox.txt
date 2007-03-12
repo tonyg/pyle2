@@ -1,5 +1,7 @@
 A test.
 
+NonExistentPage.
+
 [attachment 250px-Flag_of_the_People's_Republic_of_China.svg.png]
 
 See the backlinks:
