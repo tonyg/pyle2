@@ -263,8 +263,11 @@ class FileStore(Store):
     def has_key(self, key):
 	return os.path.exists(self.path_(key))
 
+    def current_mtime(self, key):
+        return os.stat(self.path_(key)).st_mtime
+
     def gethistory(self, key):
-        return [HistoryEntry("current", "current", os.stat(self.path_(key)).st_mtime)]
+        return [HistoryEntry("current", "current", self.current_mtime(key))]
 
     def getreadstream(self, key, version):
 	try:
@@ -311,9 +314,15 @@ class SimpleShellStoreBase(FileStore):
         self.version_cache = {}
 
     def ensure_history_for(self, key):
-        if not self.history_cache.has_key(key):
-            self.history_cache[key] = self.compute_history_for(key)
-        return self.history_cache[key]
+        while True:
+            if not self.history_cache.has_key(key):
+                self.history_cache[key] = (self.compute_history_for(key),
+                                           self.current_mtime(key))
+            (result, mtime) = self.history_cache[key]
+            if self.current_mtime(key) == mtime:
+                return result
+            else:
+                del self.history_cache[key]
 
     def pipe(self, text):
         try:
