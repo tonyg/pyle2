@@ -48,7 +48,12 @@
 	  #end if
 	  |
 	  #end if
+	  #if $page.version
+	  $internal_link($page.title, 'print', 'Print-friendly',
+			 args = {'version': $page.version})
+	  #else
 	  $internal_link($page.title, 'print', 'Print-friendly')
+	  #end if
 	  | $internal_link($page.title, 'history', 'Page History')
         </div>
 	#include $skinfile("common_page_footers.html")
