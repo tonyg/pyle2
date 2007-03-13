@@ -10,9 +10,8 @@ test -x $DAEMON || exit 0
 set -e
 
 start_pyle2 () {
-    start-stop-daemon --start --quiet --background --make-pidfile \
-	--pidfile /var/run/$NAME.pid \
-	--exec "$DAEMON >> /var/log/$NAME 2>&1"
+    $DAEMON >> /var/log/$NAME 2>&1 &
+    echo $! > /var/run/$NAME.pid
 }
 
 stop_pyle2 () {
