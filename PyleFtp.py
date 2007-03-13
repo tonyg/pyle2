@@ -48,8 +48,8 @@ class PyleFtpFS(FtpServer.FlatFileSystem):
 	def contains(self, filename):
 		return self.file_store.message_encoder().has_key(filename + '.txt')
 
-	def _retrieve_page(self, filename):
-		if not self.contains(filename):
+	def _retrieve_page(self, filename, must_exist = True):
+		if must_exist and not self.contains(filename):
 			raise FtpResponse(550, 'File not found')
 		return Core.Page(filename)
 
@@ -75,11 +75,11 @@ class PyleFtpFS(FtpServer.FlatFileSystem):
 		if filename.endswith('~'):
 			# Don't let Emacs save "backups" here.
 			return 0
-		page = self._retrieve_page(filename)
+		page = self._retrieve_page(filename, False)
 		return page.writable_for(self.user)
 
 	def updateContent(self, filename, newcontent):
-		page = self._retrieve_page(filename)
+		page = self._retrieve_page(filename, False)
 		page.setbody(newcontent)
 		page.save(self.user)
 		self.commit_transaction()
