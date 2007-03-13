@@ -506,7 +506,7 @@ class SvnStore(SimpleShellStoreBase):
             os.system(cmd)
 
 class DarcsStore(SimpleShellStoreBase):
-    def __init__(self, dirname, author_email):
+    def __init__(self, dirname, author_email = 'darcs-store@pyle'):
         SimpleShellStoreBase.__init__(self, dirname)
         self.author_email = author_email
 
