@@ -11,6 +11,7 @@ index.cgi:
 
 executable:
 	chmod a+x pyle.cgi
+	chmod a+x scripts/pyle2
 	chmod a+x PyleFtp.py
 	chmod a+x sublanguages/sequence-helper.sh
 
