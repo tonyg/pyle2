@@ -278,6 +278,7 @@ class Page(Section, Store.Item):
         self.notify_required = False
         self.container_items = None
         self._mediacache = None
+        self._rendercache = None
 
     default_properties = {
         'timestamp': rfc822.formatdate(0),
@@ -314,11 +315,13 @@ class Page(Section, Store.Item):
         if not self.version:
             self.container_items = self.cache.getpickle(self.title + '.tree', None)
             self._mediacache = self.cache.getpickle(self.title + '.mediacache', {})
+            self._rendercache = self.cache.getpickle(self.title + '.rendercache', {})
             if self.container_items is not None:
                 return
 
         self.container_items = []
         self._mediacache = {}
+        self._rendercache = {}
 
         web.ctx.active_page = self
 	doc = Block.parsestring(self.body())
@@ -328,11 +331,15 @@ class Page(Section, Store.Item):
         if not self.version:
             self.cache.setpickle(self.title + '.tree', self.container_items)
             self.cache.setpickle(self.title + '.mediacache', self._mediacache)
+            self.cache.setpickle(self.title + '.rendercache', self._rendercache)
 
     def mediacache(self):
         if self._mediacache is None:
             self.prerender('html')
         return self._mediacache
+
+    def rendercache(self):
+        return self._rendercache
 
     def save(self, user):
         savetime = time.time()
@@ -345,6 +352,7 @@ class Page(Section, Store.Item):
     def reset_cache(self):
         self.cache.delete(self.title + '.tree')
         self.cache.delete(self.title + '.mediacache')
+        self.cache.delete(self.title + '.rendercache')
 
     def delete(self, user):
         self.reset_cache()

@@ -1,31 +1,30 @@
-import Utils
-import Config
-import string
+import Core
+import Inline
+import web
 
-def footnote_pp(renderer):
-    if renderer.footnotes:
-        renderer.appendHtml('<hr><dl class="footnotes">')
-        counter = 1
-        for note in renderer.footnotes:
-            renderer.appendHtml('<dt>Footnote <a name="footnote_' + str(counter) + '"></a>' +
-                                '<a href="#footnotelink_' + str(counter) + '">' +
-                                str(counter) + '</a>:\n' +
-                                '<dd>' + ''.join(note) + '\n')
-            counter = counter + 1
-        renderer.appendHtml('</dl>')
+class Footnote(Core.Renderable):
+    def __init__(self, number, fragments):
+        self.number = number
+        self.fragments = fragments
 
-def SpanHandler(rest, renderer, acc):
-    if not hasattr(renderer, 'footnotes'):
-        renderer.footnotes = []
-        renderer.addPostProcessor(200, footnote_pp)
+    def anchor(self):
+        return 'footnote_' + str(self.number)
 
-    noteHtml = []
-    nextnote = len(renderer.footnotes) + 1
-    renderer.footnotes.append(noteHtml)
+    def refanchor(self):
+        return 'footnotelink_' + str(self.number)
 
-    rest = renderer.appendMarkup(rest, noteHtml)
+    def templateName(self):
+        return 'pyle_footnote'
 
-    acc.append('<a name="footnotelink_' + str(nextnote) + '"></a>' + \
-               '<a class="footnoteref" href="#footnote_' + str(nextnote) + '">' + \
-               str(nextnote) + '</a>')
+def SpanHandler(rest, acc):
+    (inner, rest) = Inline.parse(rest)
+
+    rendercache = web.ctx.active_page.rendercache()
+    if not rendercache.has_key('footnotes'):
+        rendercache['footnotes'] = []
+
+    number = len(rendercache['footnotes']) + 1
+    note = Footnote(number, inner)
+    rendercache['footnotes'].append(note)
+    acc.append(note)
     return rest

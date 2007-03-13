@@ -138,10 +138,20 @@ SPAN.missingspanhandler {
 	color: white;
 }
 
-A.footnoteref {
+a.footnotelink {
 	vertical-align: super;
 	font-size: smaller;
 	line-height: normal;
+}
+
+div.footnotes {
+	border-top: solid grey 1px;
+	padding-top: 1em;
+}
+
+div.footnote {
+	padding-left: 2em;
+	text-indent: -2em;
 }
 
 table {

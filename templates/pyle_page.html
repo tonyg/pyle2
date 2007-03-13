@@ -22,6 +22,21 @@ $buildtoc($subsections, 0)
 $item.render('html')
 #end for
   </div>
+#if $rendercache.has_key('footnotes')
+  <div class="footnotes">
+#for $footnote in $rendercache['footnotes']
+    <div class="footnote">
+      <span class="leader">
+	Footnote <a name="$footnote.anchor"></a>
+	<a href="#$footnote.refanchor">$footnote.number</a>:
+      </span>
+      <span class="body">
+	#for $fragment in $footnote.fragments#$fragment.render('html')#end for#	
+      </span>
+    </div>
+#end for
+  </div>
+#end if
 #if $hastoc
   <p>
     <a href="#section_toc">Go to Table of Contents</a>
