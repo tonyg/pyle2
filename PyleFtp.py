@@ -94,8 +94,17 @@ class PyleFtpFS(FtpServer.FlatFileSystem):
 		self.log_action('dele', [filename])
 
 if __name__ == '__main__':
+	def arg(n, d):
+		if len(sys.argv) > n:
+			return sys.argv[n]
+		else:
+			return d
+	hostname = arg(1, '127.0.0.1')
+	portnumber = int(arg(2, '8021'))
+	
 	Core.init_pyle()
-	svr = FtpServer.FtpServer(('127.0.0.1', 8021), PyleFtpFS,
+	print 'Listening on %s:%d' % (hostname, portnumber)
+	svr = FtpServer.FtpServer((hostname, portnumber), PyleFtpFS,
 				  bannerText = 'Pyle FTP service ready.')
 
 	if posix.getuid() == 0:
