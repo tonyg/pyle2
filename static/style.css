@@ -62,9 +62,12 @@ A.wikilink:hover {
 	background: #eeeeee;
 }
 
-DIV.quote {
+div.quote {
+	margin-left: 1em;
+	border-left: solid grey 2px;
+	padding-left: 1em;
 	color: #aa3311;
-	font-size: xx-small;    
+	font-size: 95%;
 }
 
 DIV.rightfloatbox {
