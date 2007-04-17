@@ -10,6 +10,7 @@ import sys
 import time
 import rfc822
 import User
+import Group
 import re
 import Store
 
@@ -404,10 +405,10 @@ class Page(Section, Store.Item):
                     'who': user.username}, when)
 
     def readable_for(self, user):
-        return not user.is_anonymous() or Config.allow_anonymous_view
+        return user in Group.lookup(Config.default_view_group)
 
     def writable_for(self, user):
-        return not user.is_anonymous() or Config.allow_anonymous_edit
+        return user in Group.lookup(Config.default_edit_group)
 
     def templateName(self):
 	return 'pyle_page'

@@ -88,11 +88,11 @@ default_user_properties = {}
 # to actions taken by anonymous users
 anonymous_user = "Anonymous"
 
-# Allow anonymous editing of pages?
-allow_anonymous_edit = True
+# Which group should control editing of pages that don't have a specific group set?
+default_edit_group = 'Anybody'
 
-# Allow anonymous viewing of pages?
-allow_anonymous_view = True
+# Which group should control viewing of pages that don't have a specific group set?
+default_view_group = 'Anybody'
 
 # When running a standalone FTP frontend to pyle, if running as root,
 # setuid to this user first:

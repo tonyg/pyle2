@@ -55,6 +55,14 @@ class LoginPage(Core.Renderable):
     def templateName(self):
         return 'action_loginpage'
 
+class AuthorisationFailurePage(Core.Renderable):
+    def __init__(self, action):
+        self.action = action
+        self.user = action.user()
+
+    def templateName(self):
+        return 'action_authorisationfailurepage'
+
 class Action(Core.Renderable):
     def __init__(self):
         self.loadCookies_()
@@ -109,9 +117,6 @@ class Action(Core.Renderable):
         return self._user
 
     def ensure_login(self):
-        if not self.user().is_anonymous():
-            return True
-
         self._user = None
 
         login_failed = 0
@@ -129,17 +134,49 @@ class Action(Core.Renderable):
         web.output(LoginPage(self, login_failed).render('html'))
         return False
 
-    def ensure_login_if_required(self):
-        if self.login_required():
-            return self.ensure_login()
-        else:
+    def reply_with_authorisation_failure(self):
+        web.header('Content-Type','text/html; charset=utf-8', unique=True)
+        web.output(AuthorisationFailurePage(self).render('html'))
+
+    def ensure_authorised(self, *args):
+        if self.is_authorised(self.user(), *args):
+            # If we're authorised already, even though we may be
+            # anonymous, we're good to go with presenting the page the
+            # user asked for.
             return True
 
-    def login_required(self):
+        if not self.user().is_anonymous():
+            # If we're not authorised, and we're not the anonymous
+            # user, then there's nothing more to be done. Let the user
+            # know they haven't the right permissions, and skip
+            # presenting the content they asked for.
+            self.reply_with_authorisation_failure()
+            return False
+
+        if not self.ensure_login():
+            # ensure_login returns false if it had to ask the user to
+            # prove who they are, or true if it accepted their
+            # credentials.
+            return False
+
+        # At this point, our self.user() has changed: we've just
+        # logged in, and we're not anonymous, so recheck our
+        # authorisation, because we might be allowed to do what the
+        # user asked for now.
+
+        self.saveSession() # so we're not asked to log in over and over
+
+        if self.is_authorised(self.user(), *args):
+            return True
+
+        self.reply_with_authorisation_failure()
         return False
 
+    def is_authorised(self, user, *args):
+        return True
+
     def commit(self):
-        self.saveSession_()
+        self.saveSession()
         self.ctx.store.commit()
         self.ctx.cache.commit()
         self.ctx.attachments.commit()
@@ -148,14 +185,14 @@ class Action(Core.Renderable):
         self.commit()
         return Core.Renderable.render(self, format)
 
-    def saveSession_(self):
+    def saveSession(self):
         sessionpickle = pickle.dumps(self.session)
         computedhash = mac(sessionpickle)
         web.setcookie('pyle_session',
                       computedhash + '::' + base64.encodestring(sessionpickle).strip())
 
     def GET(self, *args):
-        if self.ensure_login_if_required():
+        if self.ensure_authorised(*args):
             self.handle_request(*args)
             self.commit()
 
@@ -179,16 +216,18 @@ class PageAction(Action):
                 version = None
             self.page = Core.Page(pagename, version)
 
-    def login_required(self):
-        return not Config.allow_anonymous_view
+    def is_authorised(self, user, pagename, *more_args):
+        self.init_page(pagename)
+        return self.page.readable_for(user)
 
     def handle_request(self, pagename):
         self.init_page(pagename)
         Action.handle_request(self)
 
 class EditPageAction(PageAction):
-    def login_required(self):
-        return not Config.allow_anonymous_edit
+    def is_authorised(self, user, pagename):
+        self.init_page(pagename)
+        return self.page.writable_for(user)
 
 class read(PageAction):
     def templateName(self):
@@ -206,8 +245,10 @@ class history(PageAction):
         return 'action_history'
 
 class diff(Action):
-    def login_required(self):
-        return not Config.allow_anonymous_view
+    def is_authorised(self, user, pagename):
+        # Revisit later: what about permissions on old versions of pages??
+        page = Core.Page(pagename)
+        return page.exists() and page.readable_for(user)
 
     def handle_request(self, pagename):
         key = pagename + '.txt'
@@ -236,8 +277,8 @@ class mediacache(PageAction):
         web.output(bytes)
 
 class subscribe(PageAction):
-    def login_required(self):
-        return True
+    def is_authorised(self, user, *args):
+        return not user.is_anonymous()
 
     def handle_request(self, pagename):
         self.init_page(pagename)
@@ -327,8 +368,8 @@ class static:
             f.close()
 
 class settings(Action):
-    def login_required(self):
-        return True
+    def is_authorised(self, user, *args):
+        return not user.is_anonymous()
 
     def handle_request(self):
         self.changes_saved = False
