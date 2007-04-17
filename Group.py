@@ -70,10 +70,11 @@ class Sub(BinaryGroup):
     def __contains__(self, user):
         return (user in self.group1) and (user not in self.group2)
 
-def lookup(groupname):
+def lookup(groupname, default_value = None):
     import Groups
     g = Groups.__dict__.get(groupname, None)
     if isinstance(g, Group):
         return g
-    else:
-        raise 'No such group', groupname
+    if default_value:
+        return default_value
+    raise 'No such group', groupname
