@@ -10,7 +10,7 @@ class Group:
     def __and__(self, other): return And(self, other)
     def __or__(self, other): return Or(self, other)
     def __sub__(self, other): return Sub(self, other)
-    def __not__(self): return Not(self)
+    def negated(self): return Not(self)
 
 class EmptyGroup(Group):
     def __contains__(self, user):
