@@ -30,7 +30,7 @@ class List(Group):
         self.members = frozenset(initial_members)
 
     def __contains__(self, user):
-        return user in self.members
+        return user.getusername() in self.members
 
 class Regex(Group):
     def __init__(self, username_pattern, flags = 0):
