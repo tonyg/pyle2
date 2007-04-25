@@ -24,7 +24,7 @@ class Anonymous(Group):
     def __contains__(self, user):
         return user.is_anonymous()
 
-class List(Group):
+class NameList(Group):
     def __init__(self, initial_members = []):
         Group.__init__(self)
         self.members = frozenset(initial_members)

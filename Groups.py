@@ -3,7 +3,7 @@ import Group
 Anybody = Group.Public()
 Logged_in_user = ~Group.Anonymous()
 
-Wheel = Group.List([])
+Wheel = Group.NameList([])
 
 # LShift_Email = Group.EmailDomain('lshift.net')
 # CohesiveFT_Email = Group.EmailDomain('cohesiveft.com')
