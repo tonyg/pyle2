@@ -50,7 +50,7 @@ class Not(Group):
         self.inner_group = g
 
     def __contains__(self, user):
-        return g not in self.inner_group
+        return user not in self.inner_group
 
     def __invert__(self):
         return self.inner_group
