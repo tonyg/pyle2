@@ -94,6 +94,9 @@ default_edit_group = 'Anybody'
 # Which group should control viewing of pages that don't have a specific group set?
 default_view_group = 'Anybody'
 
+# Which group is the wheel group?
+wheel_group = 'Wheel'
+
 # When running a standalone FTP frontend to pyle, if running as root,
 # setuid to this user first:
 ftp_server_user = 'www-data'

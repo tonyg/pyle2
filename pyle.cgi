@@ -25,6 +25,7 @@ urls = (
     '/([^/]*)/edit', 'edit',
     '/([^/]*)/save', 'save',
     '/([^/]*)/delete', 'delete',
+    '/([^/]*)/chown', 'chown',
     '/([^/]*)/mediacache/(.*)', 'mediacache',
     '/([^/]*)/attach/(.*)', 'getattach',
     '/([^/]*)/attach', 'editattach',
@@ -312,6 +313,23 @@ class delete(EditPageAction):
 
     def templateName(self):
         return 'action_delete'
+
+class chown(PageAction):
+    def is_authorised(self, user, pagename, *more_args):
+        self.init_page(pagename)
+        return user.is_wheel() or (self.page.owner and self.page.owner == user.getusername())
+
+    def handle_request(self, pagename):
+        self.init_page(pagename)
+        if self.user().is_wheel():
+            self.page.owner = self.input.newowner or None
+        self.page.viewgroup = self.input.viewgroup or None
+        self.page.editgroup = self.input.editgroup or None
+        self.page.save(self.user())
+        PageAction.handle_request(self, pagename)
+
+    def templateName(self):
+        return 'action_chown'
 
 class getattach(PageAction):
     def handle_request(self, pagename, attachname):

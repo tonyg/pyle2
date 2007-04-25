@@ -284,6 +284,9 @@ class Page(Section, Store.Item):
     default_properties = {
         'timestamp': rfc822.formatdate(0),
         'author': '',
+        'owner': None,
+        'viewgroup': None,
+        'editgroup': None,
         }
 
     def __getstate__(self):
@@ -345,10 +348,18 @@ class Page(Section, Store.Item):
     def save(self, user):
         savetime = time.time()
         self.timestamp = rfc822.formatdate(savetime)
+        if not self.exists():
+            self.set_creation_properties()
         self.author = user.getusername()
         self.primitive_save()
         self.log_change('saved', user, savetime)
         self.notify_subscribers(user)
+
+    def set_creation_properties(self):
+        if not user.is_anonymous():
+            self.owner = user.getusername()
+            self.viewgroup = user.getdefaultgroup()
+            self.editgroup = user.getdefaultgroup()
 
     def reset_cache(self):
         self.cache.delete(self.title + '.tree')
@@ -405,10 +416,10 @@ class Page(Section, Store.Item):
                     'who': user.username}, when)
 
     def readable_for(self, user):
-        return user in Group.lookup(Config.default_view_group)
+        return user in Group.lookup(self.viewgroup or Config.default_view_group)
 
     def writable_for(self, user):
-        return user in Group.lookup(Config.default_edit_group)
+        return user in Group.lookup(self.editgroup or Config.default_edit_group)
 
     def templateName(self):
 	return 'pyle_page'

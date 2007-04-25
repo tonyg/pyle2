@@ -1,4 +1,5 @@
 import Config
+import Group
 import urllib
 import re
 
@@ -10,8 +11,20 @@ class User:
     def getusername(self):
         return self.username
 
+    def getdefaultgroup(self):
+        return self.defaultgroup
+
+    def all_groups(self):
+        if self.is_wheel():
+            return Group.all_groups()
+        else:
+            return dict([(k,v) for (k,v) in Group.all_groups().items() if self in v])
+
     def is_anonymous(self):
         return False
+
+    def is_wheel(self):
+        return self in Group.lookup(Config.wheel_group)
 
     def email_address_editable(self):
         return True
@@ -20,7 +33,7 @@ class User:
         props = Config.user_data_store.getpickle(self.username, Config.default_user_properties)
         self.email = props.get('email', None)
         self.subscriptions = props.get('subscriptions', [])
-        self.superuser_flag = props.get('superuser_flag', False)
+        self.defaultgroup = props.get('defaultgroup', None)
 
     def is_subscribed_to(self, pagename):
         return pagename in self.subscriptions
@@ -37,7 +50,7 @@ class User:
         props = {
             'email': self.email,
             'subscriptions': self.subscriptions,
-            'superuser_flag': self.superuser_flag,
+            'defaultgroup': self.defaultgroup,
             }
         Config.user_data_store.setpickle(self.username, props)
 
@@ -51,7 +64,7 @@ class Anonymous(User):
     def load_properties(self):
         self.email = None
         self.subscriptions = []
-        self.superuser_flag = False
+        self.defaultgroup = None
 
     def save_properties(self):
         pass
