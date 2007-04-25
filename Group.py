@@ -10,7 +10,7 @@ class Group:
     def __and__(self, other): return And(self, other)
     def __or__(self, other): return Or(self, other)
     def __sub__(self, other): return Sub(self, other)
-    def negated(self): return Not(self)
+    def __invert__(self): return Not(self)
 
 class EmptyGroup(Group):
     def __contains__(self, user):
@@ -51,6 +51,9 @@ class Not(Group):
 
     def __contains__(self, user):
         return g not in self.inner_group
+
+    def __invert__(self):
+        return self.inner_group
 
 class BinaryGroup(Group):
     def __init__(self, g1, g2):

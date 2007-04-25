@@ -1,7 +1,7 @@
 import Group
 
 Anybody = Group.Public()
-Logged_in_user = Group.Anonymous().negated()
+Logged_in_user = ~Group.Anonymous()
 
 # LShift_Email = Group.EmailDomain('lshift.net')
 # CohesiveFT_Email = Group.EmailDomain('cohesiveft.com')
