@@ -81,3 +81,7 @@ def lookup(groupname, default_value = None):
     if default_value:
         return default_value
     raise 'No such group', groupname
+
+def all_groups():
+    import Groups
+    return dict([(k, v) for (k, v) in Groups.__dict__.items() if isinstance(v, Group)])
