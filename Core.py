@@ -349,13 +349,13 @@ class Page(Section, Store.Item):
         savetime = time.time()
         self.timestamp = rfc822.formatdate(savetime)
         if not self.exists():
-            self.set_creation_properties()
+            self.set_creation_properties(user)
         self.author = user.getusername()
         self.primitive_save()
         self.log_change('saved', user, savetime)
         self.notify_subscribers(user)
 
-    def set_creation_properties(self):
+    def set_creation_properties(self, user):
         if not user.is_anonymous():
             self.owner = user.getusername()
             self.viewgroup = user.getdefaultgroup()
