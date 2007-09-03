@@ -506,8 +506,10 @@ class SvnStore(SimpleShellStoreBase):
             os.system(cmd)
 
 class DarcsStore(SimpleShellStoreBase):
-    def __init__(self, dirname, author_email = 'darcs-store@pyle'):
-        SimpleShellStoreBase.__init__(self, dirname)
+    def __init__(self, reporoot, repooffset = '', author_email = 'darcs-store@pyle'):
+        self.reporoot = reporoot
+        self.repooffset = repooffset
+        SimpleShellStoreBase.__init__(self, os.path.join(reporoot, repooffset))
         self.author_email = author_email
 
     def shell_command(self, text):
@@ -550,10 +552,10 @@ class DarcsStore(SimpleShellStoreBase):
         entry = self.gethistoryentry(key, version)
         tmpdir = os.tmpnam()
         cmd = 'darcs get --to-match="hash %s" %s %s >/dev/null' % \
-              (entry.version_id, shell_quote(self.dirname), shell_quote(tmpdir))
+              (entry.version_id, shell_quote(self.reporoot), shell_quote(tmpdir))
         os.system(cmd)
         try:
-            f = open(os.path.join(tmpdir, key), 'rb')
+            f = open(os.path.join(tmpdir, self.repooffset, key), 'rb')
             os.system('rm -rf %s' % (shell_quote(tmpdir),))
             return f
         except IOError:
