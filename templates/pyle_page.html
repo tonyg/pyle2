@@ -37,7 +37,7 @@ $item.render('html')
 #end for
   </div>
 #end if
-#if $hastoc
+#if $hastoc and not $ctx.printmode
   <p>
     <a href="#section_toc">Go to Table of Contents</a>
   </p>
