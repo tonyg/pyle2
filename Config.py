@@ -129,3 +129,7 @@ mimetypes = [
     'application/x-gzipped-tar',
     'application/x-zip-compressed',
 ]
+
+# Set to True to enable table-of-contents generation in "print
+# friendly" mode.
+include_toc_in_print_friendly = True

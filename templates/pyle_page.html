@@ -9,7 +9,7 @@
 #end if
 #end def
 #set global $hastoc = 0
-#if $subsections
+#if $subsections and ((not $ctx.printmode) or $Config.include_toc_in_print_friendly)
 #set global $hastoc = 1
   <a name="section_toc"></a>
   <div class="toc">
