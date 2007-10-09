@@ -185,3 +185,5 @@ def parse(s, result = None):
 		s = args
 	else:
 	    raise 'Invalid result from _collectFragment', what
+
+    return (result, '')
