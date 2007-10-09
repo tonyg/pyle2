@@ -246,10 +246,14 @@ class Attachment(Store.Item):
         self.pagetitle = pagetitle
         self.name = name
 
+    def compute_bodylen(self):
+        self.body()
+        return self.bodylen
+
     default_properties = {
         'mimetype': 'application/octet-stream',
         'author': '',
-        'bodylen': '0',
+        'bodylen': compute_bodylen  # an unclosed method!
         }
 
     def body(self):
@@ -263,6 +267,7 @@ class Attachment(Store.Item):
         self.bodylen = str(len(self._body))
 
     def save(self):
+        self.body()
         self.primitive_save()
 
     def delete(self):

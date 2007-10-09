@@ -8,6 +8,7 @@ import sets
 import time
 import Diff
 import StringIO
+import types
 
 import warnings
 import exceptions
@@ -691,7 +692,11 @@ class Item:
         properties = self.msgenc.getheaders(self.key, self.version)
         defaults = self.default_properties
         for k in defaults:
-            setattr(self, k, properties.get(k, defaults[k]))
+            defval = defaults[k]
+            if isinstance(defval, types.FunctionType) and not properties.has_key(k):
+                setattr(self, k, defval(self))
+            else:
+                setattr(self, k, properties.get(k, defval))
 
     def primitive_save(self):
         defaults = self.default_properties
