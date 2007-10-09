@@ -128,6 +128,7 @@ mimetypes = [
     'application/x-gzip',
     'application/x-gzipped-tar',
     'application/x-zip-compressed',
+    'audio/wav',
 ]
 
 # Set to True to enable table-of-contents generation in "print
