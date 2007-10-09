@@ -244,13 +244,13 @@ class BasicWikiMarkup:
                 break
         if is_compound:
             for line in lines[:-1]:
-                (pos, line) = trim_item_line(line)
+                (pos, line) = trim_item_line(line, leader)
                 self.visitor.visit_item(Paragraph(para.indent + pos, para.line, [line]))
-            (itempos, itemline) = trim_item_line(lines[-1])
+            (itempos, itemline) = trim_item_line(lines[-1], leader)
             itemrestlines = []
             itemlinenum = para.line + len(lines) - 1
         else:
-            (itempos, itemline) = trim_item_line(lines[0])
+            (itempos, itemline) = trim_item_line(lines[0], leader)
             itemrestlines = lines[1:]
             itemlinenum = para.line
         if doc.children:
@@ -272,11 +272,11 @@ class BasicWikiMarkup:
         self.visitor.visit_item(Paragraph(para.indent + itempos, itemlinenum, itemlines))
         self._visitkids(remainingkids)
 
-def trim_item_line(line):
-    pos = line.find(' ')
-    if pos == -1:
-        pos = len(line) - 1
-    return (pos, line[pos + 1:])
+def trim_item_line(line, leader):
+    pos = 0
+    while pos < len(line) and line[pos] == leader:
+        pos = pos + 1
+    return (pos, line[pos:])
 
 class TestVisitor:
     def begin_list(self, is_ordered):
