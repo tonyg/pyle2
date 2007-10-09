@@ -1,6 +1,6 @@
 import Inline
 
 def SpanHandler(rest, acc):
-    (inner, rest) = Inline.collectSpan(rest)
-    acc.append(Inline.TagFragment('tt', [Inline.LiteralFragment(inner)]))
+    (fragments, rest) = Inline.parse(rest)
+    acc.append(Inline.TagFragment('tt', fragments))
     return rest
