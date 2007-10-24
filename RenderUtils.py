@@ -40,17 +40,18 @@ def internal_link(pagename, service = 'read', vistext = None, format = 'html', a
     return InternalLink(pagename, service, vistext, args).render(format)
 
 class MediaCacheEntry(InternalLink):
-    def __init__(self, pagename, path, vistext, template):
+    def __init__(self, pagename, path, vistext, template, mimetype):
 	InternalLink.__init__(self, pagename, 'mediacache/' + path, vistext)
 	self.path = path
 	self.template = template
+        self.mimetype = mimetype
 
     def templateName(self):
 	return self.template
 
 def media_cache(renderer, cachepath, vistext, template, mimetype, bytes):
     renderer.page.mediacache()[cachepath] = (mimetype, bytes)
-    return MediaCacheEntry(renderer.page.title, cachepath, vistext, template)
+    return MediaCacheEntry(renderer.page.title, cachepath, vistext, template, mimetype)
 
 escape = cgi.escape
 
