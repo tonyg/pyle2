@@ -1,0 +1,12 @@
+<section>
+#if $title
+  <title>$title</title>
+#end if
+#if $container_items
+#for $item in $container_items
+$item.render('docbookx')
+#end for
+#else
+<para></para>
+#end if
+</section>
