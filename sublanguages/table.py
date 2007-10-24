@@ -101,6 +101,7 @@ class Table(Core.Container):
     def __init__(self, prefix):
 	Core.Container.__init__(self)
 	self.prefix = prefix
+	self.columncount = 0
 
     def templateName(self):
 	return 'pyle_table'
@@ -112,7 +113,8 @@ def SublanguageHandler(args, doc, renderer):
     if not prefix:
         prefix = 'class="wikimarkup"'
 
-    renderer.push_acc(Table(prefix))
+    table = Table(prefix)
+    renderer.push_acc(table)
 
     rownum = 0
     for cols in rows:
@@ -124,5 +126,6 @@ def SublanguageHandler(args, doc, renderer):
             colnum = colnum + 1
 	    renderer.push_visit_pop(TableCell(colnum, rownum, attrs_for(colnum, rownum, colspecs)),
 				    celldoc.children)
+            table.columncount = max(table.columncount, colnum)
 	renderer.pop_acc()
     renderer.pop_acc()

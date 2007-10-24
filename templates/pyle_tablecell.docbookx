@@ -1,4 +1,4 @@
-<td>
+<entry>
 #if $container_items
 #for $item in $container_items
 $item.render('docbookx')
@@ -6,4 +6,4 @@ $item.render('docbookx')
 #else
 &nbsp;
 #end if
-</td>
+</entry>
