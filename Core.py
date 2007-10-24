@@ -62,10 +62,6 @@ class Paragraph(Renderable):
     def templateName(self):
 	return 'pyle_paragraph'
 
-class ListItem(Paragraph):
-    def templateName(self):
-	return 'pyle_listitem'
-
 class Container(Renderable):
     def __init__(self, klass = ''):
 	self.klass = klass
@@ -85,6 +81,14 @@ class List(Container):
 
     def templateName(self):
 	return 'pyle_list'
+
+class ListItem(Paragraph, Container):
+    def __init__(self, blockPara, klass = ''):
+        Paragraph.__init__(self, blockPara)
+        Container.__init__(self, klass)
+
+    def templateName(self):
+	return 'pyle_listitem'
 
 class Section(Container):
     def __init__(self, rank, title):
@@ -169,8 +173,11 @@ class PyleBlockParser(Block.BasicWikiMarkup):
     def begin_list(self, is_ordered):
 	self.push_acc(List(is_ordered))
 
-    def visit_item(self, para):
-	self.add(ListItem(para))
+    def begin_listitem(self, para):
+        self.push_acc(ListItem(para))
+
+    def end_listitem(self):
+        self.pop_acc()
 
     def end_list(self, is_ordered):
 	self.pop_acc()

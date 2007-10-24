@@ -149,7 +149,8 @@ def doc_to_tuple(d):
 
 # Interface BlockRenderer:
 #   def begin_list(self, is_ordered)
-#   def visit_item(self, para)
+#   def begin_listitem(self, para)
+#   def end_listitem(self)
 #   def end_list(self, is_ordered)
 #   def visit_section(self, rank, titleline, doc)
 #   def visit_separator(self)
@@ -245,7 +246,8 @@ class BasicWikiMarkup:
         if is_compound:
             for line in lines[:-1]:
                 (pos, line) = trim_item_line(line, leader)
-                self.visitor.visit_item(Paragraph(para.indent + pos, para.line, [line]))
+                self.visitor.begin_listitem(Paragraph(para.indent + pos, para.line, [line]))
+                self.visitor.end_listitem()
             (itempos, itemline) = trim_item_line(lines[-1], leader)
             itemrestlines = []
             itemlinenum = para.line + len(lines) - 1
@@ -269,8 +271,9 @@ class BasicWikiMarkup:
             remainingkids = doc.children[1:]
         else:
             remainingkids = doc.children
-        self.visitor.visit_item(Paragraph(para.indent + itempos, itemlinenum, itemlines))
+        self.visitor.begin_listitem(Paragraph(para.indent + itempos, itemlinenum, itemlines))
         self._visitkids(remainingkids)
+        self.visitor.end_listitem()
 
 def trim_item_line(line, leader):
     pos = 0
@@ -285,9 +288,12 @@ class TestVisitor:
         else:
             print '<ul>'
 
-    def visit_item(self, para):
+    def begin_listitem(self, para):
         print '<li>'
         print para.as_string()
+
+    def end_listitem(self):
+        print '</li>'
 
     def end_list(self, is_ordered):
         if is_ordered:
