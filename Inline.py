@@ -31,13 +31,13 @@ class HtmlFragment(Core.Renderable):
 	return self.html
 
 class TagFragment(Core.Renderable):
-    def __init__(self, tag, fragments, klass=''):
-	self.tag = tag
+    def __init__(self, templateName, fragments, klass=''):
+	self.templateNameVar = templateName
 	self.klass = klass
 	self.fragments = fragments
 
     def templateName(self):
-	return 'pyle_tagfragment'
+	return self.templateNameVar
 
 class LiteralFragment(Core.Renderable):
     def __init__(self, text):
