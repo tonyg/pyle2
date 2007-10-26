@@ -254,9 +254,14 @@ class diff(Action):
     def handle_request(self, pagename):
         key = pagename + '.txt'
         msgenc = self.ctx.store.message_encoder()
-        self.v1 = msgenc.gethistoryentry(key, self.input.v1)
-        self.v2 = msgenc.gethistoryentry(key, self.input.v2)
-        self.diff = msgenc.diff(key, self.input.v1, self.input.v2)
+        v1 = self.input.v1
+        if self.input.has_key('v2'):
+            v2 = self.input.v2
+        else:
+            v2 = msgenc.gethistory(key)[0].version_id
+        self.v1 = msgenc.gethistoryentry(key, v1)
+        self.v2 = msgenc.gethistoryentry(key, v2)
+        self.diff = msgenc.diff(key, v1, v2)
 	self.pagetitle = pagename
         Action.handle_request(self)
 
