@@ -363,6 +363,7 @@ class updateattach(EditPageAction):
         if content:
             a.setbody(content)
         a.save()
+        self.commit()
         self.page.reset_cache()
         web.seeother(RenderUtils.internal_link_url(pagename, 'attach'))
 
