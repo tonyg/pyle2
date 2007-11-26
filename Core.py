@@ -428,10 +428,12 @@ class Page(Section, Store.Item):
                     'who': user.username}, when)
 
     def readable_for(self, user):
-        return user in Group.lookup(self.viewgroup or Config.default_view_group)
+        return user in Group.lookup(self.viewgroup or Config.default_view_group,
+                                    User.get_wheel_group())
 
     def writable_for(self, user):
-        return user in Group.lookup(self.editgroup or Config.default_edit_group)
+        return user in Group.lookup(self.editgroup or Config.default_edit_group,
+                                    User.get_wheel_group())
 
     def templateName(self):
 	return 'pyle_page'

@@ -3,6 +3,9 @@ import Group
 import urllib
 import re
 
+def get_wheel_group():
+    return Group.lookup(Config.wheel_group, Group.EmptyGroup())
+
 class User:
     def __init__(self, username):
         self.username = username
@@ -24,7 +27,7 @@ class User:
         return False
 
     def is_wheel(self):
-        return self in Group.lookup(Config.wheel_group)
+        return self in get_wheel_group()
 
     def email_address_editable(self):
         return True
