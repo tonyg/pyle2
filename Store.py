@@ -603,6 +603,113 @@ class DarcsStore(SimpleShellStoreBase):
             cmd = cmd + ' )) >/dev/null 2>&1'
             os.system(cmd)
 
+class MercurialStore(SimpleShellStoreBase):
+    def __init__(self, reporoot, repooffset = '', branch = 'default', author_email = 'mercurial-store@pyle'):
+        self.reporoot = reporoot
+        self.repooffset = repooffset
+        self.branch = branch
+        SimpleShellStoreBase.__init__(self, os.path.join(reporoot, repooffset))
+        self.author_email = author_email
+
+    def shell_command(self, text):
+        return 'cd ' + self.dirname + ' && hg ' + text + ' 2>/dev/null'
+
+    def gethistory(self, key):
+        (versionmap, entries) = self.ensure_history_for(key)
+        return entries
+
+    def compute_history_for(self, key):
+        import sys
+        
+        f = self.pipe('log ' + shell_quote(key))
+        lines = f.readlines()
+        f.close()
+
+        changesets = {}
+
+        changeset = {}
+        def finish_changeset():
+            if len(changeset):
+                sys.stderr.write("Considering changeset %s\n" % (changeset))
+                if not changeset.has_key('branch'):
+                    changeset['branch'] = 'default'
+                if changeset['branch'] == self.branch:
+                    changesets[changeset['changeset']] = dict(changeset) # take a copy
+                changeset.clear()
+        for line in lines:
+            if line == "\n":
+                finish_changeset()
+            else:
+                (key, value) = (s.strip() for s in line.split(":", 1))
+                changeset[key] = value
+        finish_changeset()
+
+        versionmap = {}
+        entries = []
+
+        tzre = re.compile('.*([-+])([0-9]{2})([0-9]{2})')
+        for changeset in changesets.values():
+            (friendly, revision) = changeset['changeset'].split(":", 1)
+            timestamp = 0
+            if changeset.has_key('date'):
+                datestr = changeset['date']
+                (sign, houroffset, minuteoffset) = tzre.match(datestr).groups()
+                houroffset = int(houroffset)
+                minuteoffset = int(minuteoffset)
+                if sign == '-':
+                    houroffset = -houroffset
+                    minuteoffset = -minuteoffset
+                datestr = datestr[:-6]
+                dateval = list(time.strptime(datestr, '%a %b %d %H:%M:%S %Y'))
+                dateval[3] = dateval[3] - houroffset
+                dateval[4] = dateval[4] - minuteoffset
+                dateval[8] = 0  # assert that DST is absent.
+                timestamp = time.mktime(dateval)
+            versionmap[revision] = friendly
+            entry = HistoryEntry(revision, friendly, timestamp)
+            entries.append(entry)
+
+        entries.sort(reverse = True)
+        nextentry = None
+        linkedentries = []
+        for entry in entries:
+            if nextentry and nextentry.version_id == entry.version_id:
+                pass
+            else:
+                if nextentry:
+                    entry.next = nextentry
+                    nextentry.previous = entry
+                nextentry = entry
+                linkedentries.append(entry)
+        return (versionmap, linkedentries)
+
+    def old_readstream(self, key, version):
+        return self.pipe('cat -r ' + version + ' ' + shell_quote(key)) or None
+
+    def diff(self, key, v1, v2):
+        return Diff.Diff(key, v1, v2,
+                         self.pipe_lines('diff -r %s -r %s %s' % \
+                                         (v1, v2, shell_quote(key)),
+                                         True))
+
+    def process_transaction(self, changed, deleted):
+        FileStore.process_transaction(self, changed, deleted)
+        cmd = '( cd ' + self.dirname + ' && ('
+        touched = ''
+        if deleted:
+            keys = quote_keys(deleted)
+            cmd = cmd + ' hg remove ' + keys + ' ;'
+            touched = touched + ' ' + keys
+        if changed:
+            keys = quote_keys(changed)
+            cmd = cmd + ' hg add ' + keys + ' ;'
+            touched = touched + ' ' + keys
+        if touched:
+            cmd = cmd + ' hg commit --user=' + shell_quote(self.author_email) + \
+                  ' -m "CvsStore"' + touched
+            cmd = cmd + ' )) >/dev/null 2>&1'
+            os.system(cmd)
+
 class StringAccumulator(StringIO.StringIO):
     def __init__(self):
         StringIO.StringIO.__init__(self)

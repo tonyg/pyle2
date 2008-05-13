@@ -29,10 +29,12 @@ file_store = Store.FileStore('./pyledb')
 #file_store = Store.CvsStore('./cvstest/data')
 #file_store = Store.SvnStore('./cvstest/trunk')
 #file_store = Store.DarcsStore('./darcs-pyledb')
+#file_store = Store.MercurialStore('./hg-pyledb')
 
 # Location for attachments, or None to disable attachments
 attachment_store = Store.FileStore('./pyledb/attachments')
 #attachment_store = Store.DarcsStore('./darcs-pyledb/attachments')
+#attachment_store = Store.MercurialStore('./hg-pyledb', 'attachments')
 
 # Temporary cached data store.
 cache_store = Store.FileStore('./pyledb_cache')
