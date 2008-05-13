@@ -1,11 +1,3 @@
-var dirty = true;
-var lastKeyUp = 0;
-
-function keyUp() {
-    dirty = true;
-    lastKeyUp = (new Date()).getTime();
-}
-
 function makeRequest() {
     try {
 	return new XMLHttpRequest();
@@ -50,18 +42,11 @@ function urlEncode(text) {
     return result;
 }
 
-function preview() {
-    if (dirty && resting()) {
-	var req = makeRequest();
-	if (req == null) return;
-	req.open('POST', previewUrl, false);
-	req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-	req.send('body=' + urlEncode(document.getElementById('body').value));
-	document.getElementById('previewholder').innerHTML = req.responseText;
-	dirty = false;
-    }
-    window.setTimeout('preview()', 111);
+function refreshPreview() {
+    var req = makeRequest();
+    if (req == null) return;
+    req.open('POST', previewUrl, false);
+    req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    req.send('body=' + urlEncode(document.getElementById('body').value));
+    document.getElementById('previewholder').innerHTML = req.responseText;
 }
-
-document.getElementById('body').onkeyup = keyUp;
-preview();
