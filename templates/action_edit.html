@@ -21,7 +21,7 @@
 
       <form name="editform" method="post" action="$ctx.home/$page.title/save">
 	<div class="editform">
-	  <textarea name="body" cols="80" rows="25">$escape($page.body)</textarea>
+	  <textarea id="body" name="body" cols="80" rows="25">$escape($page.body)</textarea>
 	  <br />
 	  <input type="submit" name="save" value="Save" />
 	</div>
@@ -57,6 +57,12 @@
       #end if
       <div class="footer">
 	#include $skinfile("common_page_footers.html")
+      </div>
+      <div class="previewcontainer">
+	<h2>Preview</h2>
+	<div id="previewholder"></div>
+	<script type="text/javascript">var previewUrl = "$internal_link_url($page.title, 'preview')";</script>
+	<script type="text/javascript" src="$ctx.home/_/static/preview.js"></script>
       </div>
     </div>
   </body>

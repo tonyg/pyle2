@@ -23,6 +23,7 @@ urls = (
     '/([^/]*)/backlinks', 'backlinks',
     '/([^/]*)/subscribe', 'subscribe',
     '/([^/]*)/edit', 'edit',
+    '/([^/]*)/preview', 'preview',
     '/([^/]*)/save', 'save',
     '/([^/]*)/delete', 'delete',
     '/([^/]*)/chown', 'chown',
@@ -299,6 +300,20 @@ class subscribe(PageAction):
 class edit(EditPageAction):
     def templateName(self):
         return 'action_edit'
+
+class preview(PageAction):
+    def defaultInputs(self):
+        i = PageAction.defaultInputs(self)
+        i['version'] = 'preview' ## needed to stop the cache being stomped on
+        return i
+
+    def handle_request(self, pagename):
+        self.init_page(pagename)
+        self.page.setbody(self.input.body)
+        PageAction.handle_request(self, pagename)
+
+    def templateName(self):
+        return 'action_preview'
 
 class save(EditPageAction):
     def handle_request(self, pagename):
