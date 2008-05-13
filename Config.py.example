@@ -33,7 +33,7 @@ file_store = Store.FileStore('./pyledb')
 
 # Location for attachments, or None to disable attachments
 attachment_store = Store.FileStore('./pyledb/attachments')
-#attachment_store = Store.DarcsStore('./darcs-pyledb/attachments')
+#attachment_store = Store.DarcsStore('./darcs-pyledb', 'attachments')
 #attachment_store = Store.MercurialStore('./hg-pyledb', 'attachments')
 
 # Temporary cached data store.
