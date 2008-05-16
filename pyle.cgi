@@ -250,7 +250,7 @@ class diff(Action):
     def is_authorised(self, user, pagename):
         # Revisit later: what about permissions on old versions of pages??
         page = Core.Page(pagename)
-        return page.exists() and page.readable_for(user)
+        return page.readable_for(user)
 
     def handle_request(self, pagename):
         key = pagename + '.txt'

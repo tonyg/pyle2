@@ -16,7 +16,12 @@ warnings.filterwarnings('ignore',
                         r'.*tmpnam is a potential security risk to your program$',
                         exceptions.RuntimeWarning,
                         r'.*Store$',
-                        98)
+                        112)
+warnings.filterwarnings('ignore',
+                        r'.*tmpnam is a potential security risk to your program$',
+                        exceptions.RuntimeWarning,
+                        r'.*Store$',
+                        562)
 
 class Store:
     def __init__(self):
@@ -265,7 +270,10 @@ class FileStore(Store):
 	return os.path.exists(self.path_(key))
 
     def current_mtime(self, key):
-        return os.stat(self.path_(key)).st_mtime
+        try:
+            return os.stat(self.path_(key)).st_mtime
+        except:
+            return 0
 
     def gethistory(self, key):
         return [HistoryEntry("current", "current", self.current_mtime(key))]
@@ -561,7 +569,7 @@ class DarcsStore(SimpleShellStoreBase):
             return f
         except IOError:
             os.system('rm -rf %s' % (shell_quote(tmpdir),))
-            return None
+            return StringIO.StringIO('') # file is presumably deleted at this point in time
 
     def diff(self, key, v1, v2):
         e1 = self.gethistoryentry(key, v1)
@@ -619,8 +627,6 @@ class MercurialStore(SimpleShellStoreBase):
         return entries
 
     def compute_history_for(self, key):
-        import sys
-        
         f = self.pipe('log ' + shell_quote(key))
         lines = f.readlines()
         f.close()

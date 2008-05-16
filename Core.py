@@ -309,7 +309,7 @@ class Page(Section, Store.Item):
 
     def body(self):
         if self._body is None:
-            if self.exists():
+            if self.version or self.exists():
                 return Store.Item.body(self)
             else:
                 self._body = str(DefaultPageContent(self.title).render('txt'))

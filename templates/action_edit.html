@@ -54,6 +54,10 @@
       <p>
 	$internal_link($page.title, service = 'delete', vistext = 'Delete this page')
       </p>
+      #else
+      <p>
+	$internal_link($page.title, 'history', vistext = 'View Page History (does not save any changes you may have made on this page)')
+      </p>
       #end if
       <div class="footer">
 	#include $skinfile("common_page_footers.html")

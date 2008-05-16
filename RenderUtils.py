@@ -4,7 +4,7 @@ import cgi
 import urllib
 
 class InternalLink(Core.Renderable):
-    def __init__(self, pagename, service = 'read', vistext = None, args = {}):
+    def __init__(self, pagename, service = None, vistext = None, args = {}):
 	if not vistext:
 	    vistext = pagename
 
@@ -14,7 +14,7 @@ class InternalLink(Core.Renderable):
         self.args = args
 
     def url(self):
-        if (not self.service or self.service == 'read') and not self.pageexists:
+        if (not self.service or self.service == None) and not self.pageexists:
             service = 'edit'
         else:
             service = self.service
@@ -26,7 +26,7 @@ class InternalLink(Core.Renderable):
     def templateName(self):
 	return 'pyle_internallink'
 
-def internal_link_url(pagename, service = 'read', args = {}):
+def internal_link_url(pagename, service = None, args = {}):
     if service and service != 'read':
         servicePart = '/' + service
     else:
@@ -36,7 +36,7 @@ def internal_link_url(pagename, service = 'read', args = {}):
         queryPart = '?' + queryPart
     return web.ctx.home + '/' + pagename + servicePart + queryPart
 
-def internal_link(pagename, service = 'read', vistext = None, format = 'html', args = {}):
+def internal_link(pagename, service = None, vistext = None, format = 'html', args = {}):
     return InternalLink(pagename, service, vistext, args).render(format)
 
 class MediaCacheEntry(InternalLink):
