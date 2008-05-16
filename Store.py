@@ -630,7 +630,6 @@ class MercurialStore(SimpleShellStoreBase):
         changeset = {}
         def finish_changeset():
             if len(changeset):
-                sys.stderr.write("Considering changeset %s\n" % (changeset))
                 if not changeset.has_key('branch'):
                     changeset['branch'] = 'default'
                 if changeset['branch'] == self.branch:
