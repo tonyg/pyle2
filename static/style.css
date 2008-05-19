@@ -131,6 +131,13 @@ PRE.enscript {
 	padding-right: 2em;
 }
 
+DIV.pluginerror {
+	background: red;
+	color: white;
+	padding: 0.25em;
+	white-space: pre;
+}
+
 DIV.missingsublanguage {
 	background: red;
 	color: white;

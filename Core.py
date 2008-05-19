@@ -201,7 +201,14 @@ class PyleBlockParser(Block.BasicWikiMarkup):
 	    args = ''
 	(err, plugin) = find_plugin('sublanguages', command, 'SublanguageHandler')
 	if plugin:
-	    plugin(args, doc, self)
+	    try:
+		plugin(args, doc, self)
+	    except Exception, e:
+                import traceback
+                import Inline
+                tb = traceback.format_exc()
+		self.add(Inline.MarkupError(True, 'pluginerror', tb))
+                sys.stderr.write(tb)
 	else:
 	    import Inline
 	    self.add(Inline.MarkupError(True, 'missingsublanguage', err))
