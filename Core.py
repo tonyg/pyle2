@@ -346,10 +346,16 @@ class Page(Section, Store.Item):
         self._mediacache = {}
         self._rendercache = {}
 
-        web.ctx.active_page = self
-	doc = Block.parsestring(self.body())
-	PyleBlockParser(self).visit(doc.children)
-        web.ctx.active_page = None
+        if hasattr(web.ctx, 'active_page'):
+            old_active_page = web.ctx.active_page
+        else:
+            old_active_page = None
+        try:
+            web.ctx.active_page = self
+            doc = Block.parsestring(self.body())
+            PyleBlockParser(self).visit(doc.children)
+        finally:
+            web.ctx.active_page = old_active_page
 
         if not self.version:
             self.cache.setpickle(self.title + '.tree', self.container_items)
