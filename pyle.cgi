@@ -68,9 +68,9 @@ class AuthorisationFailurePage(Core.Renderable):
 class Action(Core.Renderable):
     def __init__(self):
         self.loadCookies_()
+        self.ctx = web.ctx
         self.recoverSession_()
         self.input = web.input(**self.defaultInputs())
-        self.ctx = web.ctx
         self.ctx.store = Store.Transaction(Config.file_store)
         self.ctx.cache = Store.Transaction(Config.cache_store)
         self.ctx.attachments = Store.Transaction(Config.attachment_store)
@@ -100,7 +100,7 @@ class Action(Core.Renderable):
         self.checkSession_()
         if not self.session:
             self.session = newSession()
-        self._user = None
+        self.ctx.pyleuser = None
 
     def checkSession_(self):
         if self.session and self.session.get("ip", '') != web.ctx.ip:
@@ -114,12 +114,12 @@ class Action(Core.Renderable):
                 self.session.issuetime = now
 
     def user(self):
-        if not self._user:
-            self._user = User.lookup(self.session.username)
-        return self._user
+        if not self.ctx.pyleuser:
+            self.ctx.pyleuser = User.lookup(self.session.username)
+        return self.ctx.pyleuser
 
     def ensure_login(self):
-        self._user = None
+        self.ctx.pyleuser = None
 
         login_failed = 0
         if self.input.has_key('Pyle_username'):
@@ -128,7 +128,7 @@ class Action(Core.Renderable):
             user = User.lookup(username)
             if Config.user_authenticator.authenticate(user, password):
                 self.session.username = username
-                self._user = user
+                self.ctx.pyleuser = user
                 return True
             login_failed = 1
 
@@ -433,7 +433,7 @@ class follow_backlink(Action):
 class logout(Action):
     def handle_request(self):
         self.session.username = None
-        self._user = None
+        self.ctx.pyleuser = None
         Action.handle_request(self)
 
     def templateName(self):
