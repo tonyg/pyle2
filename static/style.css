@@ -263,6 +263,8 @@ div.diff th a { text-decoration: none; }
 div.diff .linkprev { color: lightgrey; }
 div.diff .linknext { color: lightgrey; }
 
+div.ribbon_button_container { margin-top: 1em; }
+
 /*---------------------------------------------------------------------------*/
 /* ESSAYS */
 

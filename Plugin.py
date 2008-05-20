@@ -37,6 +37,32 @@ def find_plugin(category, name, entrypoint):
                 ' missing entrypoint ' + entrypoint, None)
     return (None, getattr(mod, entrypoint))
 
+def add_default(h, key, v):
+    if not h.has_key(key):
+        h[key] = v
+    return h
+
+def custom_description(plugin, c, pr, sp, po):
+    stanza = dict(getattr(plugin, 'info', {})) # dict() makes a copy
+    stanza['keyword'] = plugin.__name__.split('.')[-1]
+
+    add_default(stanza, 'summary', '')
+    add_default(stanza, 'details', '')
+    add_default(stanza, 'friendly_name', stanza['keyword'])
+    add_default(stanza, 'plugin_category', c)
+    add_default(stanza, 'example_prefix', pr + stanza['keyword'])
+    add_default(stanza, 'example_spacing', sp)
+    add_default(stanza, 'example_template', '...')
+    add_default(stanza, 'example_postfix', po)
+
+    return stanza
+
+def spanhandler_description(plugin):
+    return custom_description(plugin, 'spanhandler', '[', ' ', ']')
+
+def sublanguage_description(plugin):
+    return custom_description(plugin, 'sublanguage', '\n\n@', '\n  ', '\n')
+
 def all_plugins(category):
     modulenames = [os.path.split(pyfile)[1][:-3]
                    for pyfile in glob.glob(os.path.join(category, "*.py"))]

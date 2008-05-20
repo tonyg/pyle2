@@ -72,3 +72,12 @@ def pquote(s):
 
 def quote(s):
     return urllib.quote(s, ':/')
+
+def all_plugin_descriptions():
+    import json
+    import Plugin
+    return json.write({"spanhandlers": [Plugin.spanhandler_description(p)
+                                        for p in Plugin.all_plugins('spanhandlers')],
+                       "sublanguages": [Plugin.sublanguage_description(p)
+                                        for p in Plugin.all_plugins('sublanguages')]
+                       })
