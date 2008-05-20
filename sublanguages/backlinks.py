@@ -1,5 +1,12 @@
 import Core
 
+info = {
+    "friendly_name": "Backlinks",
+    "example_spacing": "",
+    "example_template": "",
+    "summary": "Displays a list of pages that link to the current page.",
+}
+
 class BackLinks(Core.Renderable):
     def __init__(self, page):
         self.page = page

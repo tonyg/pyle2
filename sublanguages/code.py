@@ -4,13 +4,41 @@ import Core
 import os
 import re
 
+def get_enscript_languages():
+    if not Config.code_enscript_command:
+        return "(none - Config.code_enscript_command is not set)"
+
+    file = os.popen(Config.code_enscript_command + ' --help-highlight | grep ^Name:')
+    names = [line[5:].strip() for line in file.readlines()]
+    file.close()
+    return ', '.join(names)
+
+info = {
+    "friendly_name": "Source Code (Block)",
+    "example_spacing": " languagecode\n  ",
+    "example_template": "int main(int argc, char const **argv) {\n    ...\n  }",
+    "summary": "Prints the contained text in a source-code typeface, possibly with syntax-highlighting, without interpreting it as markup.",
+    "details": """
+
+    <p>If 'enscript' is installed (and configured in Config.py!), and a
+    language code is supplied as an argument to the '@code' line, it
+    will be used to provide syntax highlighting for the named
+    language. All the languages supported by the installed version of
+    enscript can be used. At the time this server was started, the
+    list was:</p>
+
+    <p>%s</p>
+
+    """ % get_enscript_languages()
+}
+
 import warnings
 import exceptions
 warnings.filterwarnings('ignore',
                         r'.*tmpnam is a potential security risk to your program$',
                         exceptions.RuntimeWarning,
                         r'.*sublanguages\.code$',
-                        20)
+                        50)
 
 enscriptre = re.compile('.*<PRE>(.*)</PRE>.*', re.S)
 

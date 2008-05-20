@@ -2,6 +2,19 @@ import web
 import time
 import Core
 
+info = {
+    "friendly_name": "Recent Changes List",
+    "example_template": "changecount",
+    "summary": "Inserts a description of recent Wiki activity.",
+    "details": """
+
+    <p>If 'changecount' is omitted, all changes recorded since the
+    current server was started are printed; otherwise, the list is
+    limited to just the most recent 'changecount' changes.</p>
+
+    """
+}
+
 class RecentChanges(Core.Renderable):
     def __init__(self, count):
         self.count = count

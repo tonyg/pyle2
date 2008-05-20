@@ -2,6 +2,19 @@ import Core
 import Inline
 import web
 
+info = {
+    "friendly_name": "Footnote",
+    "example_template": "text to place in footnote",
+    "summary": "Inserts a footnote at the position of the span.",
+    "details": """
+
+    <p>At the position of the span, a footnote marker is inserted. The
+    footnote text itself is placed at the bottom of the rendered page,
+    in a special section.</p>
+
+    """
+}
+
 class Footnote(Core.Renderable):
     def __init__(self, number, fragments):
         self.number = number

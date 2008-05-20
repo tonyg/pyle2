@@ -2,6 +2,76 @@ import Core
 import Block
 import re
 
+info = {
+    "friendly_name": "Table",
+    "example_spacing": "  (1,3-4,colspan='2') (2,1,style='background: #eee')\n  ",
+    "example_template": """Top left. || Top right.
+  More in the top left cell.
+  || More in the top right cell.
+
+  Second row. || Bottom right.
+              || MarkupSyntax is enabled in tables.
+
+  Third row, with colspan="2".
+  Third row, with colspan="2".
+  Third row, with colspan="2".
+  Third row, with colspan="2".
+  Third row, with colspan="2".
+
+  @dot TestTable
+   digraph TestTable {
+     x -> y -> x;
+   }
+""",
+
+    "summary": "Inserts a table in the output.",
+    "details": """
+    
+    <p>Tables are introduced using the <code>@table</code>
+    sublanguage. Columns are separated using '<code>||</code>', and
+    rows are separated by a blank line. Since there's no way at
+    present to escape the column separators, it's not possible to have
+    tables within tables, and it can be problematic trying to include
+    code or non-markup syntax using '<code>||</code>' within a table
+    cell.</p>
+
+    <h3>BNF syntax definition for tables.</h3>
+
+    <pre>table = '@table' attribute-spec* NEWLINE child-paragraph*
+
+attribute-spec = '(' range ',' range ',' html-attributes ')'
+
+range = DIGIT+
+      | DIGIT+ '-'
+      | '-' DIGIT+
+      | DIGIT+ '-' DIGIT+</pre>
+      
+      <p>You can supply HTML attributes for ranges of cells in your
+      table by supplying one or more <code>attribute-spec</code>s in
+      the <code>@table</code> header. Each <code>attribute-spec</code>
+      is a triple of a column range, a row range, and some HTML
+      attributes, in that order. For example, the table header</p>
+
+      <pre>@table (1,1,style='font-weight: bold') (2-3,-,class='myCSSclass')</pre>
+      
+      <p>causes the top-left cell to have an HTML <code>style</code>
+      attribute, and all cells in columns 2 through 3 to have an HTML
+      <code>class</code> attribute. Multiple HTML attributes can be
+      separated by spaces, as they would appear in regular HTML
+      documents.</p>
+
+      <p>Ranges can be:</p>
+
+      <ul>
+        <li><code>NN</code> - a single (1-based) column or row</li>
+        <li><code>NN-MM</code> - an inclusive 1-based range of columns or rows</li>
+        <li><code>-MM</code> - an inclusive range of columns or rows up to a particular column or row</li>
+        <li><code>NN-</code> - an inclusive range of columns or rows starting from a particular column or row</li>
+      </ul>
+
+      """
+}
+
 colspecre = re.compile(r"\s*\(([^)]+)\)\s*")
 
 def lenient_int(s):

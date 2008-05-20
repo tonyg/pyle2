@@ -2,6 +2,21 @@ import Inline
 import Core
 import web
 
+info = {
+    "friendly_name": "Attachment",
+    "example_template": "pagename:attachmentname",
+    "summary": "Links to an attachment of this (or another, named) page.",
+    "details": """
+
+    <p>If invoked as [attachment some.filename], it will either embed (if
+    the attachment is an image) or link to (otherwise) the named
+    attachment. If invoked as [attachment PageName:some.filename], it
+    will do the same, but for the named attachment on the named page
+    instead of the current page.</p>
+
+    """
+}
+
 def SpanHandler(rest, acc):
     (text, rest) = Inline.collectSpan(rest)
 

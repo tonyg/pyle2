@@ -4,6 +4,26 @@ import RenderUtils
 import Config
 import os
 
+info = {
+    "friendly_name": "Graphviz 'Dot' Graph Image",
+    "example_spacing": " NameOfGraph\n  ",
+    "example_template": """digraph NameOfGraph {
+    x -> y; y -> w; y -> z;
+    w -> a; z -> a;
+  }
+""",
+    "summary": "Embeds a <tt>dot</tt>-rendered graph in the page",
+
+    "details": """
+
+    <p>A <a href="http://www.graphviz.org/">GraphViz</a> directed graph - see
+    <a href="http://www.graphviz.org/cgi-bin/man?dot">the Dot manpage</a> for
+    syntax details. Note that the NameOfGraph needs to be unique for each Dot
+    graph on a page.</p>
+
+    """
+}
+
 def SublanguageHandler(args, doc, renderer):
     command = Config.dot_command + ' -Tpng'
     (child_stdin, child_stdout) = os.popen2(command)
