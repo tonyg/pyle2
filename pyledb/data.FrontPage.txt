@@ -1,4 +1,4 @@
-Hello, world! See RecentChanges.
+Hello, world! See RecentChanges and PluginDetails.
 
 DebuggingErlangEnscript
 
