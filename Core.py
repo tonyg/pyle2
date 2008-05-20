@@ -13,6 +13,7 @@ import User
 import Group
 import re
 import Store
+import Plugin
 
 def skinfile(file):
     p = file
@@ -120,26 +121,6 @@ class Separator(Renderable):
     def templateName(self):
 	return 'pyle_separator'
 
-def find_plugin(category, name, entrypoint):
-    try:
-	mod = __import__(category + '.' + name)
-	if hasattr(mod, name):
-	    mod = getattr(mod, name)
-	    if hasattr(mod, entrypoint):
-		return (None, getattr(mod, entrypoint))
-	    else:
-		return ('Plugin ' + category + '.' + name + \
-			' missing entrypoint ' + entrypoint, None)
-	else:
-	    return ('Plugin ' + category + '.' + name + \
-		    ' did not load correctly', None)
-    except exceptions.ImportError:
-	return ('Could not find plugin ' + category + '.' + name, None)
-    except:
-	return ('Error loading plugin ' + category + '.' + name + ':\n<tt>' +
-		cgi.escape(''.join(traceback.format_exception(*sys.exc_info()))) +
-		'</tt>', None)
-
 class PyleBlockParser(Block.BasicWikiMarkup):
     def __init__(self, page):
 	Block.BasicWikiMarkup.__init__(self, self)
@@ -199,7 +180,7 @@ class PyleBlockParser(Block.BasicWikiMarkup):
 	    args = commandparts[1]
 	else:
 	    args = ''
-	(err, plugin) = find_plugin('sublanguages', command, 'SublanguageHandler')
+	(err, plugin) = Plugin.find_plugin('sublanguages', command, 'SublanguageHandler')
 	if plugin:
 	    try:
 		plugin(args, doc, self)

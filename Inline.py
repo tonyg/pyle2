@@ -5,6 +5,7 @@ import cgi
 import Core
 import Config
 import RenderUtils
+import Plugin
 
 intlinkre = re.compile('(' + Config.linkpattern + ')')
 extlinkre = re.compile(r'\b((http|https|ftp|mailto|gopher|news|nntp|file):[^\s\(\)]+[^\s\(\).,\'\"?])([\s.,\'\"?]?)')
@@ -176,8 +177,8 @@ def parse(s, result = None):
 		handlername = 'invalid_spanhandler_name'
 		args = rest
 
-	    (err, plugin) = Core.find_plugin('spanhandlers', handlername,
-					     'SpanHandler')
+	    (err, plugin) = Plugin.find_plugin('spanhandlers', handlername,
+                                               'SpanHandler')
 	    if plugin:
 		s = plugin(args, result)
 	    else:
