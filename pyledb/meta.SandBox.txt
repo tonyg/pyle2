@@ -1,2 +1,0 @@
-timestamp: Mon, 12 Mar 2007 22:50:39 GMT
-author: tonyg@lshift.net
