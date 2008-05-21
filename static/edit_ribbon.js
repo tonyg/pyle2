@@ -69,8 +69,16 @@ function installEditRibbon() {
 	return c;
     }
 
+    function strcmp(a, b) {
+	if (a == b) return 0;
+	if (a < b) return -1;
+	return 1;
+    }
+
     function addPlugins(plugins) {
 	var c = newContainer();
+	plugins = plugins.slice();
+	plugins.sort(function (a, b) { return strcmp(a.friendly_name, b.friendly_name); });
 	for (var i = 0; i < plugins.length; i++) {
 	    addButton(plugins[i], c);
 	}
