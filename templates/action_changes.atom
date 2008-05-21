@@ -21,8 +21,8 @@
     <author>
       <name>$change.get('who', '?')</name>
     </author>
-    #if $change.newversion
-      #if $change.oldversion
+    #if $change.get('newversion', '')
+      #if $change.get('oldversion', '')
         #set $changeurl = $internal_link_url($change.get('page', '?'), 'diff', args = {'v1': $change.oldversion, 'v2': $change.newversion})
       #else
         #set $changeurl = $internal_link_url($change.get('page', '?'), args = { 'version': $change.newversion })

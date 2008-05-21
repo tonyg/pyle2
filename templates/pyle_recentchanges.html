@@ -9,7 +9,7 @@
   $internal_link($change.get('page', '?')):
   - - - ($change.get('what', '?')) $change.get('who', '?')
   - - - $time.strftime('%H:%M %Z', $eventtime)
-#if $change.oldversion or $change.newversion
+#if $change.get('oldversion', '') or $change.get('newversion', '')
   - - -
 #if $change.oldversion
 $internal_link($change.get('page', '?'), 'read', vistext = 'old',
