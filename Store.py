@@ -306,6 +306,20 @@ def parse_cvs_timestamp(s):
         timestamp = 0
     return timestamp
 
+def describe_transaction(changed, deleted):
+    return "Wikipages changed."
+#     f = StringIO.StringIO()
+#     f.write("Wikipages changed.\n")
+#     if changed:
+#         f.write("\nPages altered or added:\n")
+#         for pagename in changed:
+#             f.write(" - " + pagename + "\n")
+#     if deleted:
+#         f.write("\nPages deleted:\n")
+#         for pagename in deleted:
+#             f.write(" - " + pagename + "\n")
+#     return f.getvalue()
+
 def shell_quote(key):
     return '"' + key.replace('\\', '\\\\').replace('"', '\\"') + '"'
 
@@ -445,7 +459,9 @@ class CvsStore(SimpleShellStoreBase):
             cmd = cmd + ' cvs add -kb ' + keys + ' ;'
             touched = touched + ' ' + keys
         if touched:
-            cmd = cmd + ' cvs commit -m "CvsStore"' + touched
+            cmd = cmd + ' cvs commit -m ' + \
+                  shell_quote(describe_transaction(changed, deleted)) + \
+                  touched
             cmd = cmd + ' )) >/dev/null 2>&1'
             os.system(cmd)
 
@@ -510,7 +526,9 @@ class SvnStore(SimpleShellStoreBase):
             cmd = cmd + ' svn add ' + keys + ' ;'
             touched = touched + ' ' + keys
         if touched:
-            cmd = cmd + ' svn commit -m "CvsStore"' + touched
+            cmd = cmd + ' svn commit -m ' + \
+                  shell_quote(describe_transaction(changed, deleted)) + \
+                  touched
             cmd = cmd + ' ; svn update )) >/dev/null 2>&1'
             os.system(cmd)
 
@@ -607,7 +625,9 @@ class DarcsStore(SimpleShellStoreBase):
             touched = touched + ' ' + keys
         if touched:
             cmd = cmd + ' darcs record -a --author=' + shell_quote(self.author_email) + \
-                  ' -m "CvsStore"' + touched
+                  ' -m ' + \
+                  shell_quote(describe_transaction(changed, deleted)) + \
+                  touched
             cmd = cmd + ' )) >/dev/null 2>&1'
             os.system(cmd)
 
@@ -711,7 +731,9 @@ class MercurialStore(SimpleShellStoreBase):
             touched = touched + ' ' + keys
         if touched:
             cmd = cmd + ' hg commit --user=' + shell_quote(self.author_email) + \
-                  ' -m "CvsStore"' + touched
+                  ' -m ' + \
+                  shell_quote(describe_transaction(changed, deleted)) + \
+                  touched
             cmd = cmd + ' )) >/dev/null 2>&1'
             os.system(cmd)
 
