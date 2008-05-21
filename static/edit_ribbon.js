@@ -7,6 +7,8 @@ function installEditRibbon() {
 	var selEnd = textArea.selectionEnd;
 	var oldValue = textArea.value;
 
+	var oldScrollTop = textArea.scrollTop;
+
 	if (pluginDesc.plugin_category == "spanhandler"
 	    && pluginDesc.example_spacing != ""
 	    && selStart != selEnd)
@@ -47,6 +49,8 @@ function installEditRibbon() {
 		}
 	    }
 	}
+
+	textArea.scrollTop = oldScrollTop;
 	textArea.focus();
     }
 
