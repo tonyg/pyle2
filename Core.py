@@ -247,7 +247,7 @@ class RecentChanges(Renderable):
         previoustime = time.gmtime(0)
         def pushgroup():
             if group:
-                group.sort(None, lambda c: c.get('page', 0))
+                group.sort(None, lambda c: c.get('when', 0))
                 result.append((previoustime, group))
         for change in self.changes:
             when = change.get('when', 0)

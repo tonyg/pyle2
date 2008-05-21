@@ -6,9 +6,10 @@
 #for $change in $daychanges
 #set $eventtime = time.gmtime($change.get('when', 0))
 <li>
-  $internal_link($change.get('page', '?')):
-  - - - ($change.get('what', '?')) $change.get('who', '?')
-  - - - $time.strftime('%H:%M %Z', $eventtime)
+  $time.strftime('%H:%M %Z', $eventtime): $internal_link($change.get('page', '?')) $change.get('what', '?')
+#if $change.get('who', '')
+  by $change.get('who', '?')
+#end if
 #if $change.get('oldversion', '') or $change.get('newversion', '')
   - - -
 #if $change.oldversion
