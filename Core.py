@@ -205,8 +205,9 @@ class DefaultPageContent(Renderable):
         return 'default_page_content'
 
 class PageChangeEmail(Renderable):
-    def __init__(self, page):
+    def __init__(self, page, change_record):
         self.page = page
+        self.change_record = change_record
 
     def templateName(self):
         return 'page_change'
@@ -224,11 +225,10 @@ def normalize_newlines(s):
     s = s.replace('\r', '\n')
     return s
 
-def log_change(d, when = None):
-    if not when:
-        when = time.time()
+def log_change(d):
+    if not d.get('when', None):
+        d['when'] = time.time()
     oldchanges = web.ctx.cache.getpickle('changes', [])
-    d['when'] = when
     oldchanges.append(d)
     web.ctx.cache.setpickle('changes', oldchanges)
 
@@ -351,15 +351,19 @@ class Page(Section, Store.Item):
     def rendercache(self):
         return self._rendercache
 
-    def save(self, user):
+    def save(self, user, oldversion):
         savetime = time.time()
         self.timestamp = rfc822.formatdate(savetime)
         if not self.exists():
             self.set_creation_properties(user)
         self.author = user.getusername()
         self.primitive_save()
-        self.log_change('saved', user, savetime)
-        self.notify_subscribers(user)
+        return self.change_record('saved', user, savetime, oldversion)
+
+    def post_save_hooks(self, change_record):
+        change_record['newversion'] = self.head_version()
+        log_change(change_record)
+        self.notify_subscribers(change_record)
 
     def set_creation_properties(self, user):
         if not user.is_anonymous():
@@ -377,7 +381,7 @@ class Page(Section, Store.Item):
         self.primitive_delete()
         for name in self.attachment_names():
             Attachment(self.title, name, None).delete()
-        self.log_change('deleted', user)
+        log_change(self.change_record('deleted', user))
 
     def attachment_names(self):
         prefix = self.title + '.attach.'
@@ -408,18 +412,21 @@ class Page(Section, Store.Item):
                 result.append(user)
         return result
 
-    def notify_subscribers(self, currentuser):
+    def notify_subscribers(self, change_record):
         if self.notify_required:
-            users = [s for s in self.subscribers() if s != currentuser]
+            users = [s for s in self.subscribers() if s.username != change_record['who']]
             if users:
-                notification = str(PageChangeEmail(self).render('email'))
+                notification = str(PageChangeEmail(self, change_record).render('email'))
                 send_emails(users, notification)
             self.notify_required = False
 
-    def log_change(self, event, user, when = None):
-        log_change({'page': self.title,
-                    'what': event,
-                    'who': user.username}, when)
+    def change_record(self, event, user, when = None, oldversion = None, newversion = None):
+        return {'page': self.title,
+                'what': event,
+                'who': user.username,
+                'when': when,
+                'oldversion': oldversion,
+                'newversion': newversion}
 
     def readable_for(self, user):
         return user in Group.lookup(self.viewgroup or Config.default_view_group,

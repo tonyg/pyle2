@@ -24,17 +24,6 @@ class RecentChanges(Core.Renderable):
         if self.count is not None:
             self.changes = self.changes[-self.count:]
 
-    def filter_duplicates(self, group):
-        previous = None
-        result = []
-        for change in group:
-            if previous and previous.get('page', '?') != change.get('page', '?'):
-                result.append(previous)
-            previous = change
-        if previous:
-            result.append(previous)
-        return result
-
     def changes_by_day(self):
         result = []
         group = []
@@ -42,8 +31,7 @@ class RecentChanges(Core.Renderable):
         def pushgroup():
             if group:
                 group.sort(None, lambda c: c.get('page', 0))
-                filteredgroup = self.filter_duplicates(group)
-                result.append((previoustime, filteredgroup))
+                result.append((previoustime, group))
         for change in self.changes:
             when = change.get('when', 0)
             eventtime = time.gmtime(when)
@@ -58,6 +46,8 @@ class RecentChanges(Core.Renderable):
     def changes_by_day_newest_first(self):
         result = self.changes_by_day()
         result.reverse()
+        for (when, group) in result:
+            group.reverse()
         return result
 
     def templateName(self):

@@ -81,7 +81,7 @@ class PyleFtpFS(FtpServer.FlatFileSystem):
 	def updateContent(self, filename, newcontent):
 		page = self._retrieve_page(filename, False)
 		page.setbody(newcontent)
-		page.save(self.user)
+		page.save(self.user, None)
 		self.commit_transaction()
 		self.log_action('stor', [filename])
 

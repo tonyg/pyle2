@@ -319,7 +319,9 @@ class save(EditPageAction):
     def handle_request(self, pagename):
         self.init_page(pagename)
         self.page.setbody(self.input.body)
-        self.page.save(self.user())
+        change_record = self.page.save(self.user(), self.input.get('oldversion', None))
+        self.commit()
+        self.page.post_save_hooks(change_record)
         web.seeother(RenderUtils.internal_link_url(self.page.title))
 
 class delete(EditPageAction):
@@ -345,7 +347,7 @@ class chown(PageAction):
             self.page.owner = self.input.newowner or None
         self.page.viewgroup = self.input.viewgroup or None
         self.page.editgroup = self.input.editgroup or None
-        self.page.save(self.user())
+        self.page.save(self.user(), None)
         PageAction.handle_request(self, pagename)
 
     def templateName(self):

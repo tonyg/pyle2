@@ -9,6 +9,22 @@
   $internal_link($change.get('page', '?')):
   - - - ($change.get('what', '?')) $change.get('who', '?')
   - - - $time.strftime('%H:%M %Z', $eventtime)
+#if $change.oldversion or $change.newversion
+  - - -
+#if $change.oldversion
+$internal_link($change.get('page', '?'), 'read', vistext = 'old',
+               args = {'version': $change.oldversion})
+#end if
+#if $change.newversion
+$internal_link($change.get('page', '?'), 'read', vistext = 'new',
+               args = {'version': $change.newversion})
+#end if
+#if $change.oldversion and $change.newversion
+$internal_link($change.get('page', '?'), 'diff', vistext = 'diff',
+               args = {'v1': $change.oldversion,
+                       'v2': $change.newversion})
+#end if
+#end if
 </li>
 #end for
 </ul>

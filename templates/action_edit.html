@@ -21,6 +21,7 @@
 
       <form name="editform" method="post" action="$ctx.home/$page.title/save">
 	<div class="editform">
+	  <input type="hidden" name="oldversion" value="$page.head_version" />
 	  <textarea id="body" name="body" cols="80" rows="25">$escape($page.body)</textarea>
 	  <br />
 	  <input type="submit" name="save" value="Save" />

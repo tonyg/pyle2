@@ -850,6 +850,13 @@ class Item:
             entry.author = props.get('author', '') or Config.anonymous_user
         return entries
 
+    def head_version(self):
+        entries = self.msgenc.gethistory(self.key)
+        if entries:
+            return entries[0].version_id
+        else:
+            return None
+
     def friendly_version(self):
         if self.version:
             e = self.msgenc.gethistoryentry(self.key, self.version)
