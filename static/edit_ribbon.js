@@ -86,8 +86,20 @@ function installEditRibbon() {
     }
 
     var blocklanguage_container = newContainer();
-    var sublanguage_container = addPlugins(pluginDescriptions.sublanguages);
     var spanhandler_container = addPlugins(pluginDescriptions.spanhandlers);
+    var sublanguage_container = addPlugins(pluginDescriptions.sublanguages);
+
+    var headerPrefix = "\n\n";
+    for (var i = 0; i < 4; i++) {
+	headerPrefix = headerPrefix + "*";
+	addButton({friendly_name: "H" + (i + 1),
+		   plugin_category: "blockstructure",
+		   example_prefix: headerPrefix,
+		   example_spacing: " ",
+		   example_template: "Heading Text",
+		   example_postfix: ""},
+		  blocklanguage_container);
+    }
 
     addButton({friendly_name: "Unnumbered Item",
 	       plugin_category: "blockstructure",
