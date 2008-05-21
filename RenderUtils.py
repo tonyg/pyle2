@@ -2,6 +2,7 @@ import web
 import Core
 import cgi
 import urllib
+import time
 
 class InternalLink(Core.Renderable):
     def __init__(self, pagename, service = None, vistext = None, args = {}):
@@ -81,3 +82,6 @@ def all_plugin_descriptions():
                        "sublanguages": [Plugin.sublanguage_description(p)
                                         for p in Plugin.all_plugins('sublanguages')]
                        })
+
+def atomDate(unixTime):
+    return time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(unixTime))

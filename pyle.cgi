@@ -37,6 +37,7 @@ urls = (
     '/_/follow_backlink', 'follow_backlink',
     '/_/logout', 'logout',
     '/_/search', 'search',
+    '/_/changes', 'changes',
     )
 
 def mac(str):
@@ -472,6 +473,37 @@ class search(Action):
 
     def templateName(self):
         return 'action_search'
+
+class changes(Action):
+    def __init__(self):
+        Action.__init__(self)
+        self.recentchanges = Core.RecentChanges(None)
+
+    def prerender(self, format):
+        self.recentchanges.prerender(format)
+        deltas = []
+        for change in self.recentchanges.changes:
+            if change.has_key('page'):
+                pagename = change['page']
+                page = Core.Page(pagename)
+                if page.readable_for(User.anonymous):
+                    deltas.append(change)
+        deltas.reverse()
+        self.deltas = deltas
+        return Action.prerender(self, format)
+
+    def defaultInputs(self):
+        d = Action.defaultInputs(self)
+        d['format'] = 'atom'
+        return d
+
+    def templateName(self):
+        return 'action_changes'
+
+    def handle_request(self, *args):
+        if self.input.format == 'atom':
+            web.header('Content-Type','application/atom+xml; charset=utf-8', unique=True)
+        return Action.handle_request(self, *args)
 
 if __name__ == '__main__':
     Core.init_pyle()
