@@ -38,7 +38,7 @@ warnings.filterwarnings('ignore',
                         r'.*tmpnam is a potential security risk to your program$',
                         exceptions.RuntimeWarning,
                         r'.*sublanguages\.code$',
-                        50)
+                        49)
 
 enscriptre = re.compile('.*<PRE>(.*)</PRE>.*', re.S)
 

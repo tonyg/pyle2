@@ -16,12 +16,12 @@ warnings.filterwarnings('ignore',
                         r'.*tmpnam is a potential security risk to your program$',
                         exceptions.RuntimeWarning,
                         r'.*Store$',
-                        112)
+                        129)
 warnings.filterwarnings('ignore',
                         r'.*tmpnam is a potential security risk to your program$',
                         exceptions.RuntimeWarning,
                         r'.*Store$',
-                        562)
+                        602)
 
 class Store:
     def __init__(self):
