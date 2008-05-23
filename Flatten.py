@@ -22,7 +22,6 @@ def flatten_wiki(chosen_root = None, dump_tree = False):
     Local variables:
      - outbound_links: maps page title to list of page titles
      - inbound_links: maps page title to list of page titles
-     - bestparent: maps page title to page title
      - parent: maps page title to page title (or None, for orphans)
      - children: maps page title to list of page titles
      - roots: list of page titles
@@ -34,16 +33,15 @@ def flatten_wiki(chosen_root = None, dump_tree = False):
     this is a sorting based on a rough approximation to page
     popularity or authoritativeness, similar to what Google are doing.
 
-    'bestparent' is the parent that each individual page would 'like'
-    to have: the highest-ranked of all the pages it links to, if such
-    a page exists; otherwise the highest-ranked page linking to it;
-    otherwise None.
-
-    The 'parent' map takes 'bestparent' into account in selecting the
-    final parent of a particular page, but has parent-child cycles
-    broken, forming for the first time a proper tree. Less popular
-    nodes are inserted into 'parent' first, so that more popular nodes
-    will end up closer to the root of the final tree.
+    The 'parent' map finds the highest-ranked potential parent that it
+    can find for each page, excluding those possibilities that lead to
+    (indirect) child-parent cycles, forming for the first time a
+    proper tree. Pages linked to by the page under consideration are
+    considered first as potential parents; if no such page satisfies
+    the 'no cycle' check, then the pages that link to the page are
+    considered. Less popular nodes are inserted into 'parent' first,
+    so that more popular nodes will end up closer to the root of the
+    final tree.
 
     The tree is then re-rooted at actual_root, and the final
     representation is constructed and returned.
@@ -80,25 +78,15 @@ def flatten_wiki(chosen_root = None, dump_tree = False):
     sort_table_by_inbound_links(outbound_links)
     sort_table_by_inbound_links(inbound_links)
 
-    def best_parent_from(selections, page):
-        for selection in selections:
-            if selection != page:
-                return selection
-        return None
-
-    bestparent = {}
-    for (page, targets) in outbound_links.items():
-        p = best_parent_from(targets, page)
-        if not p: p = best_parent_from(inbound_links.get(page, []), page)
-        bestparent[page] = p
-
-    pages_by_inbound_link_count = bestparent.keys()
+    pages_by_inbound_link_count = outbound_links.keys()
     sort_by_inbound_links(pages_by_inbound_link_count, reverse = False)
 
     parent = {}
     roots = sets.Set()
 
     def path_from_to(a, b):
+        if a == b:
+            return True
         node = a
         while node:
             p = parent.get(node, None)
@@ -107,11 +95,21 @@ def flatten_wiki(chosen_root = None, dump_tree = False):
             node = p
         return False
 
+    def best_parent_from(selections, page):
+        for selection in selections:
+            if not path_from_to(selection, page):
+                return selection
+        return None
+
     for page in pages_by_inbound_link_count:
-        if path_from_to(bestparent[page], page):
-            roots.add(page)
+        targets = outbound_links[page]
+        bestparent = best_parent_from(targets, page)
+        if not bestparent: bestparent = best_parent_from(inbound_links.get(page, []), page)
+
+        if bestparent:
+            parent[page] = bestparent
         else:
-            parent[page] = bestparent[page]
+            roots.add(page)
 
     def reroot_at(page):
         node = page
