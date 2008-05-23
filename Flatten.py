@@ -4,6 +4,50 @@ import re
 import sets
 
 def flatten_wiki(chosen_root = None, dump_tree = False):
+    """
+    Flattens the graph of wiki pages into a tree (as contained within
+    Config.file_store), using a pagerank-like algorithm to decide how
+    to break the DAG into a tree, and bottom-up tree construction to
+    decide how best to represent cyclic (parent-to-child) paths.
+
+    Returns a triple:
+     [0] = the name of the root page
+     [1] = the tree rooted at that page
+     [2] = dictionary of orphans (orphan name -> tree rooted there)
+
+    If chosen_root is supplied, and not None, then it will be used as
+    the main root of the main tree ('actual_root'). Otherwise, the
+    most 'popular' page in the entire wiki is used as the root.
+
+    Local variables:
+     - outbound_links: maps page title to list of page titles
+     - inbound_links: maps page title to list of page titles
+     - bestparent: maps page title to page title
+     - parent: maps page title to page title (or None, for orphans)
+     - children: maps page title to list of page titles
+     - roots: list of page titles
+     - actual_root: page title
+
+    Each entry in both of outbound_links and inbound_links is
+    eventually sorted so that the first title in the list is the page
+    with the most inbound links of all the candidates. Essentially,
+    this is a sorting based on a rough approximation to page
+    popularity or authoritativeness, similar to what Google are doing.
+
+    'bestparent' is the parent that each individual page would 'like'
+    to have: the highest-ranked of all the pages it links to, if such
+    a page exists; otherwise the highest-ranked page linking to it;
+    otherwise None.
+
+    The 'parent' map takes 'bestparent' into account in selecting the
+    final parent of a particular page, but has parent-child cycles
+    broken, forming for the first time a proper tree. Less popular
+    nodes are inserted into 'parent' first, so that more popular nodes
+    will end up closer to the root of the final tree.
+
+    The tree is then re-rooted at actual_root, and the final
+    representation is constructed and returned.
+    """
     msgenc = Config.file_store.message_encoder()
 
     outbound_links = {}
@@ -103,6 +147,10 @@ def flatten_wiki(chosen_root = None, dump_tree = False):
     return result
 
 def dump(node, indent):
+    """
+    Prints a representation of a tree-of-dictionaries. Useful for
+    debugging flatten_wiki.
+    """
     for (childname, childnode) in node.items():
         print '%s- %s' % ('        ' * indent, childname)
         dump(childnode, indent + 1)
