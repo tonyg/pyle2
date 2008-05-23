@@ -442,13 +442,7 @@ class Page(Section, Store.Item):
         return Attachment(self.title, name, version)
 
     def backlinks(self):
-        result = []
-        r = re.compile(r'\b' + re.escape(self.title) + r'\b')
-        for otherpage in self.msgenc.keys_glob('*.txt'):
-            othertext = self.msgenc.getbody(otherpage, None)
-            if r.search(othertext):
-                result.append(otherpage[:-4]) # chop off the '.txt'
-        return result
+        return backlinks(self.title, self.msgenc)
 
     def subscribers(self):
         result = []
@@ -484,6 +478,15 @@ class Page(Section, Store.Item):
 
     def templateName(self):
 	return 'pyle_page'
+
+def backlinks(pagename, msgenc):
+    result = []
+    r = re.compile(r'\b' + re.escape(pagename) + r'\b')
+    for otherpage in msgenc.keys_glob('*.txt'):
+        othertext = msgenc.getbody(otherpage, None)
+        if r.search(othertext):
+            result.append(otherpage[:-4]) # chop off the '.txt'
+    return result
 
 app_initialised = 0
 def init_pyle():
