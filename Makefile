@@ -15,8 +15,12 @@ executable:
 	chmod a+x PyleFtp.py
 	chmod a+x sublanguages/sequence-helper.sh
 
-clean: cleancache
+clean: mostlycleancache
 	rm -f $$(find . -name '*.pyc')
+
+# Like cleancache, but preserves the changes file
+mostlycleancache:
+	cd pyledb_cache; ls | grep -v '^changes$$' | xargs rm -f
 
 cleancache:
 	rm -f pyledb_cache/*
