@@ -448,15 +448,17 @@ class search(Action):
         self.keywords = [k for k in self.input.get('q', '').split(' ') if k]
         if self.keywords:
             self.ran_search = True
-            self.results = self.run_search()
+            (self.total_result_count, self.result_groups) = self.run_search()
         else:
             self.ran_search = False
-            self.results = []
+            self.total_result_count = 0
+            self.result_groups = []
         Action.handle_request(self)
 
     def run_search(self):
         regexes = [re.compile(re.escape(k), re.IGNORECASE) for k in self.keywords]
-        result = []
+        result = {}
+        total_result_count = 0
         msgenc = self.ctx.store.message_encoder()
         for key in msgenc.keys_glob('*.txt'):
             pagetitle = key[:-4] # chop off '.txt'
@@ -464,13 +466,22 @@ class search(Action):
             if text is not None:
                 score = 0
                 headerscore = 0
+                keyword_count = 0
                 for r in regexes:
                     headerscore = len(r.findall(pagetitle))
-                    score = score + len(r.findall(text)) + headerscore
+                    score_increment = len(r.findall(text)) + headerscore
+                    score = score + score_increment
+                    if score_increment:
+                        keyword_count = keyword_count + 1
                 if score:
-                    result.append((score, bool(headerscore), pagetitle))
-        result.sort(None, lambda r: r[0], True)
-        return result
+                    if not result.has_key(keyword_count): result[keyword_count] = []
+                    result[keyword_count].append((score, bool(headerscore), pagetitle))
+                    total_result_count = total_result_count + 1
+        for group in result.values():
+            group.sort(None, lambda r: r[0], True) # sort by overall score
+        result = list(result.items())
+        result.sort(None, lambda r: r[0], True) # sort groups by keyword_count
+        return (total_result_count, result)
 
     def templateName(self):
         return 'action_search'

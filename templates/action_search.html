@@ -18,19 +18,37 @@
 	</div>
       </form>
       #if $ran_search
-      #if $results
+      #if $total_result_count
       <p>
-	Searching for "#echo ' '.join($keywords)#" returned $len($results) results:
+	Searching for "#echo ' '.join($keywords)#" returned $total_result_count results in total.
       </p>
-      <ul class="searchresults">
-	#set $have_headermatch = 0
-	#for ($score, $in_header, $pagename) in $results
-	#if $in_header
-	#set $have_headermatch = 1
-	<li><b>$internal_link($pagename) ($score)</b></li>
-	#else
-	<li>$internal_link($pagename) ($score)</li>
-	#end if
+      <ul class="searchresultsgroups">
+	#for ($keyword_count, $results) in $result_groups
+	<li>
+	  $len($results)
+	  #if $len($results) == 1
+	  page
+	  #else
+	  pages
+	  #end if
+	  matched $keyword_count
+	  #if $keyword_count == 1
+	  keyword:
+	  #else
+	  keywords:
+	  #end if
+	  <ul class="searchresults">
+	    #set $have_headermatch = 0
+	    #for ($score, $in_header, $pagename) in $results
+	    #if $in_header
+	    #set $have_headermatch = 1
+	    <li><b>$internal_link($pagename) ($score)</b></li>
+	    #else
+	    <li>$internal_link($pagename) ($score)</li>
+	    #end if
+	    #end for
+	  </ul>
+	</li>
 	#end for
       </ul>
       #if $have_headermatch
