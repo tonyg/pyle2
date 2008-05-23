@@ -8,6 +8,10 @@ See the backlinks:
 
 @backlinks
 
+See the backlinks for the PluginDetails page:
+
+@backlinks PluginDetails
+
 *** This is a heading
 that spans [i multiple] lines
 
