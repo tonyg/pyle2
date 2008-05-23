@@ -11,6 +11,7 @@
   by $change.get('who', '?')
 #end if
 #if $change.get('oldversion', '') or $change.get('newversion', '')
+#if $change.oldversion != $change.newversion
   - - -
 #if $change.oldversion
 $internal_link($change.get('page', '?'), 'read', vistext = 'old',
@@ -24,6 +25,7 @@ $internal_link($change.get('page', '?'), 'read', vistext = 'new',
 $internal_link($change.get('page', '?'), 'diff', vistext = 'diff',
                args = {'v1': $change.oldversion,
                        'v2': $change.newversion})
+#end if
 #end if
 #end if
 </li>
