@@ -14,6 +14,7 @@ import Group
 import re
 import Store
 import Plugin
+import sets
 
 def skinfile(file):
     p = file
@@ -128,18 +129,29 @@ class Separator(Renderable):
     def templateName(self):
 	return 'pyle_separator'
 
+class BlockSyntaxError(Exception): pass
+
 class PyleBlockParser(Block.BasicWikiMarkup):
     def __init__(self, page):
 	Block.BasicWikiMarkup.__init__(self, self)
 	self.page = page
 	self.accumulator = page
 	self.stack = []
+        self.rank_offset = 0
 
     def current_rank(self):
 	if isinstance(self.accumulator, Section):
-	    return self.accumulator.rank
+	    return self.accumulator.rank - self.rank_offset
 	else:
 	    return 0
+
+    def save_rank_offset(self):
+        old_offset = self.rank_offset
+        self.rank_offset = self.rank_offset + self.current_rank()
+        return old_offset
+
+    def restore_rank_offset(self, old_offset):
+        self.rank_offset = old_offset
 
     def push_acc(self, acc):
 	self.accumulator.addItem(acc)
@@ -175,7 +187,7 @@ class PyleBlockParser(Block.BasicWikiMarkup):
 	    self.pop_acc()
 #	while self.current_rank() < rank - 1:
 #	    self.push_acc(Section(self.current_rank() + 1, None))
-	self.push_acc(Section(rank, titlepara))
+	self.push_acc(Section(rank + self.rank_offset, titlepara))
 
     def visit_separator(self):
 	self.add(Separator())
@@ -191,7 +203,10 @@ class PyleBlockParser(Block.BasicWikiMarkup):
 	if plugin:
 	    try:
 		plugin(args, doc, self)
-	    except Exception, e:
+            except BlockSyntaxError, e:
+                import Inline
+                self.add(Inline.MarkupError(True, 'pluginerror', e.message))
+	    except:
                 import traceback
                 import Inline
                 tb = traceback.format_exc()
@@ -379,8 +394,7 @@ class Page(Section, Store.Item):
             old_active_page = None
         try:
             web.ctx.active_page = self
-            doc = Block.parsestring(self.body())
-            PyleBlockParser(self).visit(doc.children)
+            self.render_on(PyleBlockParser(self))
         finally:
             web.ctx.active_page = old_active_page
 
@@ -388,6 +402,18 @@ class Page(Section, Store.Item):
             self.cache.setpickle(self.title + '.tree', self.container_items)
             self.cache.setpickle(self.title + '.mediacache', self._mediacache)
             self.cache.setpickle(self.title + '.rendercache', self._rendercache)
+
+    def render_on(self, renderer):
+        if hasattr(web.ctx, 'source_page_title'):
+            old_source_page_title = web.ctx.source_page_title
+        else:
+            old_source_page_title = None
+        try:
+            web.ctx.source_page_title = self.title
+            doc = Block.parsestring(self.body())
+            return renderer.visit(doc.children)
+        finally:
+            web.ctx.source_page_title = old_source_page_title
 
     def mediacache(self):
         if self._mediacache is None:
@@ -418,9 +444,13 @@ class Page(Section, Store.Item):
             self.editgroup = user.getdefaultgroup()
 
     def reset_cache(self):
-        self.cache.delete(self.title + '.tree')
-        self.cache.delete(self.title + '.mediacache')
-        self.cache.delete(self.title + '.rendercache')
+        reset_cache(self.cache, self.title)
+
+    def mark_dependency_on(self, other_title):
+        key = other_title + '.dependencies'
+        dependencies = self.cache.getpickle(key, sets.Set())
+        dependencies.add(self.title)
+        self.cache.setpickle(key, dependencies)
 
     def delete(self, user):
         self.reset_cache()
@@ -478,6 +508,21 @@ class Page(Section, Store.Item):
 
     def templateName(self):
 	return 'pyle_page'
+
+def reset_cache(cache, initial_title):
+    seen = sets.Set()
+    def reset1(title):
+        if title in seen:
+            return
+        seen.add(title)
+        cache.delete(title + '.tree')
+        cache.delete(title + '.mediacache')
+        cache.delete(title + '.rendercache')
+        dependencies = cache.getpickle(title + '.dependencies', sets.Set())
+        cache.delete(title + '.dependencies')
+        for dependency in dependencies:
+            reset1(dependency)
+    reset1(initial_title)
 
 def backlinks(pagename, msgenc):
     result = []

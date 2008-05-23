@@ -27,7 +27,7 @@ def SpanHandler(rest, acc):
     if name.find(':') != -1:
         (pagename, name) = name.split(':', 1)
     if not pagename:
-        pagename = web.ctx.active_page.title
+        pagename = web.ctx.source_page_title
 
     if len(parts) > 1:
         alt = parts[1]
