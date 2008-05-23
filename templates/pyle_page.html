@@ -3,7 +3,7 @@
 #if $sections
       <ul class="toc level$depth">
 #for $section in $sections
-        <li><a href="#$section.anchor">#echo '.'.join(map(str, $section.tocpath))# $section.title</a>$buildtoc($section.subsections, $depth + 1)</li>
+        <li><a href="#$section.anchor">#echo '.'.join(map(str, $section.tocpath))# $section.heading.render('html')</a>$buildtoc($section.subsections, $depth + 1)</li>
 #end for
       </ul>
 #end if

@@ -188,7 +188,8 @@ class BasicWikiMarkup:
                 numstars = 1
                 while firstline[numstars] == '*': numstars = numstars + 1
                 state = self.goto_state(state, None)
-                self.visitor.visit_section(numstars, firstline[numstars:].strip(), kid)
+                lines[0] = firstline[numstars:].strip()
+                self.visitor.visit_section(numstars, para, kid)
                 self._visitkids(kid.children)
                 continue
 
@@ -301,8 +302,8 @@ class TestVisitor:
         else:
             print '</ul>'
 
-    def visit_section(self, rank, titleline, doc):
-        print '<h' + str(rank) + '>' + titleline + '</h' + str(rank) + '>'
+    def visit_section(self, rank, titlepara, doc):
+        print '<h' + str(rank) + '>' + titlepara.as_string() + '</h' + str(rank) + '>'
 
     def visit_separator(self):
         print '<hr>'

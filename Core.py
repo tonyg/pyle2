@@ -91,13 +91,20 @@ class ListItem(Paragraph, Container):
     def templateName(self):
 	return 'pyle_listitem'
 
+class SectionHeading(Paragraph):
+    def templateName(self):
+        return 'pyle_sectionheading'
+
 class Section(Container):
-    def __init__(self, rank, title):
+    def __init__(self, rank, titlepara):
 	Container.__init__(self)
 	self.rank = rank
         self.tocpath = []
         self.subsectioncount = 0
-	self.title = title
+        if titlepara:
+            self.heading = SectionHeading(titlepara)
+        else:
+            self.heading = None
 
     def subsections(self):
         return [x for x in self.container_items if isinstance(x, Section)]
@@ -163,12 +170,12 @@ class PyleBlockParser(Block.BasicWikiMarkup):
     def end_list(self, is_ordered):
 	self.pop_acc()
 
-    def visit_section(self, rank, titleline, doc):
+    def visit_section(self, rank, titlepara, doc):
 	while self.current_rank() >= rank:
 	    self.pop_acc()
 #	while self.current_rank() < rank - 1:
 #	    self.push_acc(Section(self.current_rank() + 1, None))
-	self.push_acc(Section(rank, titleline))
+	self.push_acc(Section(rank, titlepara))
 
     def visit_separator(self):
 	self.add(Separator())
@@ -312,7 +319,8 @@ class Attachment(Store.Item):
 class Page(Section, Store.Item):
     def __init__(self, title, version = None):
         Store.Item.__init__(self, web.ctx.store, title + '.txt', version)
-        Section.__init__(self, 0, title)
+        Section.__init__(self, 0, None)
+        self.title = title
 	self.cache = web.ctx.cache
         self.notify_required = False
         self.container_items = None
