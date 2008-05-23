@@ -523,6 +523,7 @@ def reset_cache(cache, initial_title):
         for dependency in dependencies:
             reset1(dependency)
     reset1(initial_title)
+    cache.delete('sitemap')
 
 def backlinks(pagename, msgenc):
     result = []
