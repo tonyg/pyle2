@@ -186,7 +186,8 @@ class BasicWikiMarkup:
 
             if para.indent == 0 and firstline.startswith('*'):
                 numstars = 1
-                while firstline[numstars] == '*': numstars = numstars + 1
+                while numstars < len(firstline) and firstline[numstars] == '*':
+                    numstars = numstars + 1
                 state = self.goto_state(state, None)
                 lines[0] = firstline[numstars:].strip()
                 self.visitor.visit_section(numstars, para, kid)
