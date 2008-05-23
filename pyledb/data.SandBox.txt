@@ -7,3 +7,21 @@ NonExistentPage.
 See the backlinks:
 
 @backlinks
+
+*** This is a heading
+that spans [i multiple] lines
+
+*** This is another heading
+
+that doesn't span multiple lines
+
+*** This is a bloody awkward heading
+    that has a second line indented
+
+*** A heading
+    - with a list in it
+    - with a second element
+
+*** Another heading
+- with a list immediately
+- with a second element
