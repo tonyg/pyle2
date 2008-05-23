@@ -38,6 +38,7 @@ urls = (
     '/_/logout', 'logout',
     '/_/search', 'search',
     '/_/changes', 'changes',
+    '/_/sitemap', 'sitemap',
     )
 
 def mac(str):
@@ -504,6 +505,15 @@ class changes(Action):
         if self.input.format == 'atom':
             web.header('Content-Type','application/atom+xml; charset=utf-8', unique=True)
         return Action.handle_request(self, *args)
+
+class sitemap(Action):
+    def prerender(self, format):
+        import Flatten
+        (self.root_name, self.root_node, self.orphans) = \
+                         Flatten.flatten_wiki(Config.flattened_root)
+
+    def templateName(self):
+        return 'action_sitemap'
 
 if __name__ == '__main__':
     Core.init_pyle()

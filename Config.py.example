@@ -21,6 +21,10 @@ session_expiry_time = -1
 # Name of default page
 frontpage = 'FrontPage'
 
+# Name of page to use as root of flattened view of wiki.
+# Set to None to choose an appropriate root based on link counts.
+flattened_root = None
+
 # Internal-link pattern - be careful when changing this
 linkpattern = r'\b([A-Z]+[a-z0-9]+){2,}'
 
