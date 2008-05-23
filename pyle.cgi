@@ -507,13 +507,15 @@ class changes(Action):
         return Action.handle_request(self, *args)
 
 class sitemap(Action):
-    def prerender(self, format):
-        m = self.ctx.cache.getpickle('sitemap', None)
-        if not m:
+    def render(self, format):
+        cached_output = self.ctx.cache.getpickle('sitemap', None)
+        if not cached_output:
             import Flatten
-            m = Flatten.flatten_wiki(Config.flattened_root)
-            self.ctx.cache.setpickle('sitemap', m)
-        (self.root_name, self.root_node, self.orphans) = m
+            (self.root_name, self.root_node, self.orphans) = \
+                             Flatten.flatten_wiki(Config.flattened_root)
+            cached_output = str(Action.render(self, format))
+            self.ctx.cache.setpickle('sitemap', cached_output)
+        return cached_output
 
     def templateName(self):
         return 'action_sitemap'
