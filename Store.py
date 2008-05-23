@@ -95,6 +95,7 @@ class Store:
         f1 = tempfilewith(text1)
         f2 = tempfilewith(text2)
         command = 'diff -u3 %s %s' % (f1, f2)
+        self.debug_log_cmd(command, 'diff')
         f = os.popen(command)
         result = f.readlines()
         f.close()
@@ -105,8 +106,24 @@ class Store:
     def process_transaction(self, changed, deleted):
         for key, value in changed.items():
             self.setbinary(key, value)
+        result = []
         for key in deleted:
-            self.delete(key)
+            keyresult = self.delete(key)
+            if type(keyresult) != bool:
+                raise Exception('delete() method on store %s returned non-boolean %s for key %s'
+                                % (self, keyresult, key))
+            if keyresult:
+                result.append(key)
+        return result
+
+    def debug_log_cmd(self, command, context):
+        #import sys
+        #sys.stderr.write("Store.debug_log_cmd: %s: %s\n" % (context, command))
+        pass
+
+    def system(self, command, context):
+        self.debug_log_cmd(command, context)
+        return os.system(command)
 
 def tempfilewith(text):
     name = os.tmpnam()
@@ -291,8 +308,9 @@ class FileStore(Store):
     def delete(self, key):
         try:
             os.unlink(self.path_(key))
+            return True
         except exceptions.OSError:
-            pass
+            return False
 
 def parse_cvs_timestamp(s):
     m = re.match('(\d+)[/-](\d+)[/-](\d+) +(\d+):(\d+):(\d+)( +([^ ]+))?', s)
@@ -349,7 +367,9 @@ class SimpleShellStoreBase(FileStore):
 
     def pipe(self, text):
         try:
-            return os.popen(self.shell_command(text), 'r')
+            cmd = self.shell_command(text)
+            self.debug_log_cmd(cmd, 'pipe')
+            return os.popen(cmd, 'r')
         except:
             return None
 
@@ -389,7 +409,7 @@ class SimpleShellStoreBase(FileStore):
 
     def delete(self, key):
         self.history_cache.pop(key, None)
-        FileStore.delete(self, key)
+        return FileStore.delete(self, key)
 
 class CvsStore(SimpleShellStoreBase):
     def __init__(self, dirname):
@@ -447,11 +467,11 @@ class CvsStore(SimpleShellStoreBase):
                                          True))
 
     def process_transaction(self, changed, deleted):
-        FileStore.process_transaction(self, changed, deleted)
+        actually_deleted = FileStore.process_transaction(self, changed, deleted)
         cmd = '( cd ' + shell_quote(self.dirname) + ' && ('
         touched = ''
-        if deleted:
-            keys = quote_keys(deleted)
+        if actually_deleted:
+            keys = quote_keys(actually_deleted)
             cmd = cmd + ' cvs remove ' + keys + ' ;'
             touched = touched + ' ' + keys
         if changed:
@@ -460,10 +480,11 @@ class CvsStore(SimpleShellStoreBase):
             touched = touched + ' ' + keys
         if touched:
             cmd = cmd + ' cvs commit -m ' + \
-                  shell_quote(describe_transaction(changed, deleted)) + \
+                  shell_quote(describe_transaction(changed, actually_deleted)) + \
                   touched
             cmd = cmd + ' )) >/dev/null 2>&1'
-            os.system(cmd)
+            self.system(cmd, 'process_transaction')
+        return actually_deleted
 
 class SvnStore(SimpleShellStoreBase):
     def __init__(self, dirname):
@@ -514,11 +535,11 @@ class SvnStore(SimpleShellStoreBase):
                                          True))
 
     def process_transaction(self, changed, deleted):
-        FileStore.process_transaction(self, changed, deleted)
+        actually_deleted = FileStore.process_transaction(self, changed, deleted)
         cmd = '( cd ' + self.dirname + ' && ('
         touched = ''
-        if deleted:
-            keys = quote_keys(deleted)
+        if actually_deleted:
+            keys = quote_keys(actually_deleted)
             cmd = cmd + ' svn delete ' + keys + ' ;'
             touched = touched + ' ' + keys
         if changed:
@@ -527,10 +548,11 @@ class SvnStore(SimpleShellStoreBase):
             touched = touched + ' ' + keys
         if touched:
             cmd = cmd + ' svn commit -m ' + \
-                  shell_quote(describe_transaction(changed, deleted)) + \
+                  shell_quote(describe_transaction(changed, actually_deleted)) + \
                   touched
             cmd = cmd + ' ; svn update )) >/dev/null 2>&1'
-            os.system(cmd)
+            self.system(cmd, 'process_transaction')
+        return actually_deleted
 
 class DarcsStore(SimpleShellStoreBase):
     def __init__(self, reporoot, repooffset = '', author_email = 'darcs-store@pyle'):
@@ -580,13 +602,13 @@ class DarcsStore(SimpleShellStoreBase):
         tmpdir = os.tmpnam()
         cmd = 'darcs get --to-match="hash %s" %s %s >/dev/null' % \
               (entry.version_id, shell_quote(self.reporoot), shell_quote(tmpdir))
-        os.system(cmd)
+        self.system(cmd, 'old_readstream')
         try:
             f = open(os.path.join(tmpdir, self.repooffset, key), 'rb')
-            os.system('rm -rf %s' % (shell_quote(tmpdir),))
+            self.system('rm -rf %s' % (shell_quote(tmpdir),), 'old_readstream')
             return f
         except IOError:
-            os.system('rm -rf %s' % (shell_quote(tmpdir),))
+            self.system('rm -rf %s' % (shell_quote(tmpdir),), 'old_readstream')
             return StringIO.StringIO('') # file is presumably deleted at this point in time
 
     def diff(self, key, v1, v2):
@@ -613,11 +635,11 @@ class DarcsStore(SimpleShellStoreBase):
             return Diff.Diff(key, v1, v2, [])
 
     def process_transaction(self, changed, deleted):
-        FileStore.process_transaction(self, changed, deleted)
+        actually_deleted = FileStore.process_transaction(self, changed, deleted)
         cmd = '( cd ' + self.dirname + ' && ('
         touched = ''
-        if deleted:
-            keys = quote_keys(deleted)
+        if actually_deleted:
+            keys = quote_keys(actually_deleted)
             touched = touched + ' ' + keys
         if changed:
             keys = quote_keys(changed)
@@ -626,10 +648,10 @@ class DarcsStore(SimpleShellStoreBase):
         if touched:
             cmd = cmd + ' darcs record -a --author=' + shell_quote(self.author_email) + \
                   ' -m ' + \
-                  shell_quote(describe_transaction(changed, deleted)) + \
+                  shell_quote(describe_transaction(changed, actually_deleted)) + \
                   touched
             cmd = cmd + ' )) >/dev/null 2>&1'
-            os.system(cmd)
+            self.system(cmd, 'process_transaction')
 
 class MercurialStore(SimpleShellStoreBase):
     def __init__(self, reporoot, repooffset = '', branch = 'default', author_email = 'mercurial-store@pyle'):
@@ -718,11 +740,11 @@ class MercurialStore(SimpleShellStoreBase):
                                          True))
 
     def process_transaction(self, changed, deleted):
-        FileStore.process_transaction(self, changed, deleted)
+        actually_deleted = FileStore.process_transaction(self, changed, deleted)
         cmd = '( cd ' + self.dirname + ' && ('
         touched = ''
-        if deleted:
-            keys = quote_keys(deleted)
+        if actually_deleted:
+            keys = quote_keys(actually_deleted)
             cmd = cmd + ' hg remove ' + keys + ' ;'
             touched = touched + ' ' + keys
         if changed:
@@ -732,10 +754,11 @@ class MercurialStore(SimpleShellStoreBase):
         if touched:
             cmd = cmd + ' hg commit --user=' + shell_quote(self.author_email) + \
                   ' -m ' + \
-                  shell_quote(describe_transaction(changed, deleted)) + \
+                  shell_quote(describe_transaction(changed, actually_deleted)) + \
                   touched
             cmd = cmd + ' )) >/dev/null 2>&1'
-            os.system(cmd)
+            self.system(cmd, 'process_transaction')
+        return actually_deleted
 
 class StringAccumulator(StringIO.StringIO):
     def __init__(self):
