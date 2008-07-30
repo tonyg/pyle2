@@ -4,6 +4,7 @@ import cgi
 import Block
 import os
 import Cheetah.Template
+import Cheetah.Filters
 import exceptions
 import traceback
 import sys
@@ -36,7 +37,8 @@ class Renderable:
             'skinfile': skinfile,
             })
 	return Cheetah.Template.Template(file = templatename,
-					 searchList = (self, RenderUtils, extra))
+					 searchList = (self, RenderUtils, extra),
+                                         filter = Cheetah.Filters.EncodeUnicode)
 
     def prerender(self, format):
         pass
