@@ -45,13 +45,13 @@ $arrow
 	      $link("prev", $v1.previous, $v2)
 	      version $v1.friendly_id
 	      $link("next", $v1.next, $v2)
-	      <br />$time.strftime('%a %b %Y %H:%M:%S %Z', $time.localtime($v1.timestamp))
+	      <br />$time.strftime('%a %d %b %Y %H:%M:%S %Z', $time.localtime($v1.timestamp))
 	    </th>
 	    <th class="new header">
 	      $link("prev", $v1, $v2.previous)
 	      version $v2.friendly_id
 	      $link("next", $v1, $v2.next)
-	      <br />$time.strftime('%a %b %Y %H:%M:%S %Z', $time.localtime($v2.timestamp))
+	      <br />$time.strftime('%a %d %b %Y %H:%M:%S %Z', $time.localtime($v2.timestamp))
 	    </th>
 	  </tr>
 	  #for $chunk in $diff.chunks
