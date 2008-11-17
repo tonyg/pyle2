@@ -534,6 +534,7 @@ def backlinks(pagename, msgenc):
         othertext = msgenc.getbody(otherpage, None)
         if r.search(othertext):
             result.append(otherpage[:-4]) # chop off the '.txt'
+    result.sort()
     return result
 
 app_initialised = 0
