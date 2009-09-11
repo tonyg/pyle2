@@ -1,6 +1,6 @@
-# Pyle, a WikiClone in Python
-# Copyright (C) 2004 Tony Garnock-Jones <tonyg@kcbbs.gen.nz>
-# Copyright (C) 2004 LShift Ltd. <query@lshift.net>
+# PYLE - A WikiClone in Python
+# Copyright (C) 2004 - 2009  Tony Garnock-Jones <tonyg@kcbbs.gen.nz>
+# Copyright (C) 2004 - 2009  LShift Ltd <query@lshift.net>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
