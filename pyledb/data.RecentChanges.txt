@@ -1,3 +1,7 @@
 These are the recent changes:
 
 @recentchanges
+
+----
+
+CategoryMeta

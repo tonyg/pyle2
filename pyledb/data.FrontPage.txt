@@ -1,53 +1,14 @@
-Hello, world! See RecentChanges and PluginDetails.
+Pyle is a WikiClone - an implementation of a program sharing general
+ideas with the original WikiWiki developed by Ward Cunningham.
 
-DebuggingErlangEnscript
+Pyle is written entirely in Python, and is released under the GNU
+GeneralPublicLicense.
 
- - one
- - two
+This wiki ships with a few pages of content by default, including:
 
- # first
- # second
- # third
-
-This is a test.
-Could _*things*_ be like this?
-As concurrent as the π calculus.
-
-As concurrent as the π calculus. SandBox. See [bug 1]
-
-Hello! Try TestPage, and AmqpReliableTransferNotes.
-
-@table (-,1,style="font-weight:bold") (2,2,colspan="2") (1,2-,style="font-style:italic") (1,5,colspan="3")
-  Cell 1          || Cell 2 || Cell 3
-
-  Another couple      || More stuff goes
-  of cells            || in here
-    - nested list     ||   - another list
-    - second row      ||   - more
-                      ||
-  ----                || And of course more text never really
-                      || goes astray with [i examples] like
-  Another paragraph   || this.
-  containing rubbish. ||
-
-  Empty cell to the right || || empty cell to the left
-
-  Further || stuff
-  More    || things
-  Again   || stuff  || @dot
-          ||        ||  digraph G {
-          ||        ||    x -> y -> z;
-          ||        ||    z -> x;
-          ||        ||  }
-
-  A single long table cell. A single long table cell. A single
-  long table cell. A single long table cell. A single long table
-  cell.
-
-List things:
-
- - some text
-  -more
-  -text
- -some text
- - some text
+ - InstallationGuide, which shows you how to install and configure Pyle
+ - RecentChanges, which shows you the most recent changes made in the wiki
+ - PluginDetails, where you can get help on the installed plugins
+ - SearchWiki, where you can learn about searching the wiki content
+ - MarkupSyntax, where you can learn about the syntax used for various kinds of markup in Pyle pages
+ - SandBox, a scratch page where you can experiment with syntax.
