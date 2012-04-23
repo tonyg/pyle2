@@ -1,45 +1,45 @@
-body, li, td, th {
-/*	font-family: Arial,Lucida,Helvetica,sans-serif;  */
-	font-family: 'georgia', 'times new roman', serif;
-	font-size: 9pt;
-	background: white;
+body {
+    background: grey;
+    margin: 0;
 }
 
-form {
-	margin: 0pt;
-	padding: 0pt;
+h1, h2, h3, h4, h5, h6 {
+    font-family: "Georgia";
+}
+h1 { font-size: 24pt; }
+h2 { font-size: 20pt; }
+h3 { font-size: 16pt; }
+h4 { font-size: 14pt; }
+
+.title h1 {
+    margin: 0;
+    font-family: "Georgia";
 }
 
-H1,H2,H3,H4,H5,H6 {
-/*	font-family: Arial,Lucida,Helvetica,sans-serif; */
-	margin: 0pt;
-	margin-bottom: 1em;
+body, p, td, th {
+    font-family: "Monaco";
+    font-size: 12pt;
 }
 
-H1 {
-	font-size: 20pt;
+hr {
+    border: none;
+    border-top: solid grey 1px;
 }
 
-H2 {
-	font-size: 16pt; 
-/*	font-style: italic; */
+pre, code, textarea {
+    font-family: "Courier";
 }
 
-H3 { 
-	font-size: 12pt;
-/*	font-style: italic; */
+pre {
+    background: #dddddd;
+    padding: 0.5em;
 }
 
-H4 {
-	font-size: 10pt;
-}
-
-H5 {
-	font-size: 9pt;
-}
-
-H6 {
-	font-size: 9pt;
+.container {
+    width: 50em;
+    background: white;
+    padding: 1em;
+    margin: 0 auto;
 }
 
 A {
@@ -68,7 +68,6 @@ div.quote {
 	border-left: solid grey 2px;
 	padding-left: 1em;
 	color: #aa3311;
-	font-size: 95%;
 }
 
 DIV.rightfloatbox {
@@ -106,21 +105,8 @@ DIV.rightfloatbox {
 	border-top: solid #006ee5 1px;
 }
 
-.title h1 {
-	margin-bottom: 0.4em;
-}
-
-.title h1 a {
-	text-decoration: none;
-}
-
 .title .backlinks {
 	float: right;
-}
-
-HR {
-	border: none;
-	border-top: solid black 2px;
 }
 
 PRE.enscript {
@@ -158,6 +144,7 @@ a.footnotelink {
 div.footnotes {
 	border-top: solid grey 1px;
 	padding-top: 1em;
+	margin-top: 1em;
 }
 
 div.footnote {
